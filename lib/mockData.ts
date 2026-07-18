@@ -7,11 +7,11 @@ const MOCK_BROKERS = [
 ];
 
 const MOCK_PROPERTIES = [
-  { id: "p1", title: "2BR Apartment in Kololo", description: "Modern apartment with pool", propertyType: "apartment", imageUrl: [], videoUrl: [], location: "Kololo, Kampala", brokersUniqueCode: "BRK-001", isAvailable: true, createdAt: "2026-01-20T10:00:00Z", photoCount: 8, videoCount: 1, brokerTier: "fibrous", maxPhotos: 25, maxVideos: 2 },
-  { id: "p2", title: "3BR Villa in Muyenga", description: "Spacious family villa", propertyType: "villa", imageUrl: [], videoUrl: [], location: "Muyenga, Kampala", brokersUniqueCode: "BRK-002", isAvailable: true, createdAt: "2026-03-15T10:00:00Z", photoCount: 12, videoCount: 0, brokerTier: "buttress", maxPhotos: 50, maxVideos: 4 },
-  { id: "p3", title: "Office Space in CBD", description: "Prime office location", propertyType: "commercial", imageUrl: [], videoUrl: [], location: "CBD, Kampala", brokersUniqueCode: "BRK-004", isAvailable: false, createdAt: "2026-05-10T10:00:00Z", photoCount: 5, videoCount: 2, brokerTier: "fibrous", maxPhotos: 25, maxVideos: 2 },
-  { id: "p4", title: "Land Plot in Kira", description: "Residential land for sale", propertyType: "land", imageUrl: [], videoUrl: [], location: "Kira, Wakiso", brokersUniqueCode: "BRK-001", isAvailable: true, createdAt: "2026-06-22T10:00:00Z", photoCount: 4, videoCount: 0, brokerTier: "fibrous", maxPhotos: 25, maxVideos: 2 },
-  { id: "p5", title: "1BR Studio in Ntinda", description: "Cozy studio apartment", propertyType: "apartment", imageUrl: [], videoUrl: [], location: "Ntinda, Kampala", brokersUniqueCode: "BRK-003", isAvailable: true, createdAt: "2026-07-01T10:00:00Z", photoCount: 6, videoCount: 0, brokerTier: "prop", maxPhotos: 15, maxVideos: 1 },
+  { id: "p1", title: "2BR Apartment in Kololo", description: "Modern apartment with pool", propertyType: "apartment", imageUrl: ["/images.jpg"], videoUrl: [], location: "Kololo, Kampala", brokersUniqueCode: "BRK-001", isAvailable: true, createdAt: "2026-01-20T10:00:00Z", photoCount: 8, videoCount: 1, brokerTier: "fibrous", maxPhotos: 25, maxVideos: 2 },
+  { id: "p2", title: "3BR Villa in Muyenga", description: "Spacious family villa", propertyType: "villa", imageUrl: ["/images-1.jpg"], videoUrl: [], location: "Muyenga, Kampala", brokersUniqueCode: "BRK-002", isAvailable: true, createdAt: "2026-03-15T10:00:00Z", photoCount: 12, videoCount: 0, brokerTier: "buttress", maxPhotos: 50, maxVideos: 4 },
+  { id: "p3", title: "Office Space in CBD", description: "Prime office location", propertyType: "commercial", imageUrl: ["/images-2.jpg"], videoUrl: [], location: "CBD, Kampala", brokersUniqueCode: "BRK-004", isAvailable: false, createdAt: "2026-05-10T10:00:00Z", photoCount: 5, videoCount: 2, brokerTier: "fibrous", maxPhotos: 25, maxVideos: 2 },
+  { id: "p4", title: "Land Plot in Kira", description: "Residential land for sale", propertyType: "land", imageUrl: ["/images.jpg"], videoUrl: [], location: "Kira, Wakiso", brokersUniqueCode: "BRK-001", isAvailable: true, createdAt: "2026-06-22T10:00:00Z", photoCount: 4, videoCount: 0, brokerTier: "fibrous", maxPhotos: 25, maxVideos: 2 },
+  { id: "p5", title: "1BR Studio in Ntinda", description: "Cozy studio apartment", propertyType: "apartment", imageUrl: ["/images-1.jpg"], videoUrl: [], location: "Ntinda, Kampala", brokersUniqueCode: "BRK-003", isAvailable: true, createdAt: "2026-07-01T10:00:00Z", photoCount: 6, videoCount: 0, brokerTier: "prop", maxPhotos: 15, maxVideos: 1 },
 ];
 
 const MOCK_TRANSACTIONS = [
@@ -161,10 +161,10 @@ export const mockData = {
   propertyLocations: () => ({ locations: MOCK_PROPERTY_LOCATIONS }),
   featuredProperties: () => ({
     properties: [
-      { id: "p1", title: "2BR Apartment in Kololo", description: "Modern apartment with shared pool, balcony & 24/7 security.", propertyType: "apartment", location: "Kololo, Kampala", brokerCode: "BRK-001", price: 850000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/a9710e/ffffff?text=Kololo+Apartment", isAvailable: true },
-      { id: "p2", title: "3BR Villa in Muyenga", description: "Spacious family villa with garden, double garage & maid's quarter.", propertyType: "villa", location: "Muyenga, Kampala", brokerCode: "BRK-002", price: 1500000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/5d4037/ffffff?text=Muyenga+Villa", isAvailable: true },
-      { id: "p4", title: "Land Plot in Kira", description: "Residential land for sale, surveyed and ready for title processing.", propertyType: "land", location: "Kira, Wakiso", brokerCode: "BRK-001", price: 420000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/d1a054/5d4037?text=Kira+Land", isAvailable: true },
-      { id: "p5", title: "1BR Studio in Ntinda", description: "Cozy studio apartment, ideal for young professionals. Gated community.", propertyType: "apartment", location: "Ntinda, Kampala", brokerCode: "BRK-003", price: 320000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/a9610e/ffffff?text=Ntinda+Studio", isAvailable: true },
+      { id: "p1", title: "2BR Apartment in Kololo", description: "Modern apartment with shared pool, balcony & 24/7 security.", propertyType: "apartment", location: "Kololo, Kampala", brokerCode: "BRK-001", price: 850000, priceLabel: "Booking", imageUrl: "/images.jpg", isAvailable: true },
+      { id: "p2", title: "3BR Villa in Muyenga", description: "Spacious family villa with garden, double garage & maid's quarter.", propertyType: "villa", location: "Muyenga, Kampala", brokerCode: "BRK-002", price: 1500000, priceLabel: "Booking", imageUrl: "/images-1.jpg", isAvailable: true },
+      { id: "p4", title: "Land Plot in Kira", description: "Residential land for sale, surveyed and ready for title processing.", propertyType: "land", location: "Kira, Wakiso", brokerCode: "BRK-001", price: 420000, priceLabel: "Booking", imageUrl: "/images-2.jpg", isAvailable: true },
+      { id: "p5", title: "1BR Studio in Ntinda", description: "Cozy studio apartment, ideal for young professionals. Gated community.", propertyType: "apartment", location: "Ntinda, Kampala", brokerCode: "BRK-003", price: 320000, priceLabel: "Booking", imageUrl: "/images.jpg", isAvailable: true },
     ],
   }),
 };

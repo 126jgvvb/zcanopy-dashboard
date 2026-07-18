@@ -1,10 +1,11 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { OnboardingShell, PrimaryButton } from "@/components/Onboarding";
 import { COLORS } from "@/lib/theme";
 
-export default function BrokerWelcomePage() {
+function BrokerWelcomePageInner() {
   const params = useSearchParams();
   const email = params.get("email") ?? "";
   const code = params.get("code") ?? "";
@@ -60,5 +61,13 @@ export default function BrokerWelcomePage() {
         </PrimaryButton>
       </div>
     </OnboardingShell>
+  );
+}
+
+export default function BrokerWelcomePage() {
+  return (
+    <Suspense fallback={null}>
+      <BrokerWelcomePageInner />
+    </Suspense>
   );
 }

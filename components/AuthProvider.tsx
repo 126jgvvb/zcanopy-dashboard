@@ -23,6 +23,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<AdminProfile>;
   devLogin: (email: string, password: string) => Promise<AdminProfile>;
+  bypass: () => void;
   logout: () => void;
   getToken: () => string | null;
 }
@@ -126,10 +127,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAdmin(null);
   }, []);
 
+  const bypass = useCallback(() => {
+    document.cookie = `${COOKIE_NAME}=${DEV_ADMIN.token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+    document.cookie = "zcanopy_dev_bypass=1; path=/; max-age=86400; samesite=lax";
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEV_ADMIN));
+    setAdmin(DEV_ADMIN);
+  }, []);
+
   const getToken = useCallback(() => admin?.token ?? null, [admin]);
 
   return (
-    <AuthContext.Provider value={{ admin, loading, login, devLogin, logout, getToken }}>
+    <AuthContext.Provider value={{ admin, loading, login, devLogin, bypass, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );

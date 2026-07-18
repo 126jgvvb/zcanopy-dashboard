@@ -19,7 +19,7 @@ export default function LoginForm({
   redirect?: string;
 }) {
   const router = useRouter();
-  const { admin, login, devLogin, loading: authLoading } = useAuth();
+  const { admin, login, devLogin, bypass, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,7 +69,7 @@ export default function LoginForm({
   }
 
   function handleBypass() {
-    document.cookie = "zcanopy_dev_bypass=1; path=/; max-age=86400; samesite=lax";
+    bypass();
     router.replace(redirect || "/dashboard");
   }
 

@@ -217,12 +217,21 @@ export default function BrokerDetailPage({
                     className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md hover:border-[var(--zcanopy-accent-gold)]"
                   >
                     <div className="relative h-52 w-full overflow-hidden rounded-t-2xl bg-gray-100">
-                      <div className="flex h-full w-full items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-4xl">🏠</div>
-                          <p className="mt-1 text-xs text-gray-400">Property Image</p>
+                      {p.imageUrl && p.imageUrl[0] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.imageUrl[0]}
+                          alt={p.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-4xl">🏠</div>
+                            <p className="mt-1 text-xs text-gray-400">Property Image</p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <div className="absolute right-2 top-2">
                         <span className={`rounded-full px-2 py-0.5 text-xs ${p.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                           {p.isAvailable ? "Available" : "Unavailable"}

@@ -1,0 +1,53 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type Theme = "light" | "dark";
+
+/**
+ * Light/dark theme toggle.
+ *
+ * The initial theme is applied before paint by an inline script in the root
+ * layout (reading localStorage, falling back to the OS preference). This
+ * component simply reflects and updates that state.
+ */
+export default function ThemeToggle({ className = "" }: { className?: string }) {
+  const [theme, setTheme] = useState<Theme>("light");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
+    setMounted(true);
+  }, []);
+
+  function toggle() {
+    setTheme((prev) => {
+      const next: Theme = prev === "dark" ? "light" : "dark";
+      const root = document.documentElement;
+      if (next === "dark") root.classList.add("dark");
+      else root.classList.remove("dark");
+      try {
+        localStorage.setItem("theme", next);
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  }
+
+  const isDark = theme === "dark";
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200/60 bg-[var(--zcanopy-surface)] text-lg transition-colors hover:border-[var(--zcanopy-primary)] ${className}`}
+    >
+      {/* Render a stable icon until mounted to avoid hydration mismatch. */}
+      <span aria-hidden>{mounted ? (isDark ? "☀️" : "🌙") : "🌙"}</span>
+    </button>
+  );
+}

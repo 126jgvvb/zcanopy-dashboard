@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useAdminData } from "@/components/ui";
+import { useEffect, useRef, useState } from "react";
+import { usePublicData } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
+import Footer from "@/components/Footer";
+import ThemeToggle from "@/components/ThemeToggle";
 
 function formatUGX(n: number) {
   try {
@@ -76,7 +78,11 @@ export default function LandingPage() {
             <a href="#features" className="hover:text-[var(--zcanopy-primary)]">Features</a>
             <a href="#how" className="hover:text-[var(--zcanopy-primary)]">How it works</a>
             <a href="#stats" className="hover:text-[var(--zcanopy-primary)]">Impact</a>
+            <ThemeToggle />
           </nav>
+          <div className="md:hidden">
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -128,7 +134,7 @@ export default function LandingPage() {
       {/* Full-width video */}
       <section className="relative">
         <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
             <video
               className="h-[320px] w-full object-cover sm:h-[440px]"
               autoPlay
@@ -139,10 +145,14 @@ export default function LandingPage() {
               poster="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1600&q=70"
             >
               <source
-                src="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+                src="/sample_vid.mp4"
                 type="video/mp4"
               />
             </video>
+
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-b from-black/40 via-black/10 to-black/40">
+              <GlowFallingText text="let zcanopy deliver the property to you" />
+            </div>
           </div>
           <p className="mt-4 text-center text-sm text-gray-500">
             Discover homes across Uganda — tours, bookings, and verified brokers, all in one place.
@@ -186,7 +196,7 @@ export default function LandingPage() {
             { n: "03", t: "Commission split", d: "The platform commission is calculated and the broker's share is earmarked." },
             { n: "04", t: "Payout", d: "Verified brokers withdraw earnings straight to their mobile money wallet." },
           ].map((s) => (
-            <div key={s.n} className="rounded-2xl bg-[var(--zcanopy-surface)] p-6 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.05)" }}>
+            <div key={s.n} className="rounded-2xl border border-black/5 bg-[var(--zcanopy-surface)] p-6 shadow-sm transition-all duration-300 hover:scale-105 hover:border-yellow-400 hover:shadow-lg">
               <span className="text-3xl font-bold" style={{ color: COLORS.accentGold }}>{s.n}</span>
               <h3 className="mt-3 text-base font-semibold" style={{ color: COLORS.cardBrown }}>{s.t}</h3>
               <p className="mt-2 text-sm text-gray-600">{s.d}</p>
@@ -300,31 +310,14 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200/60 bg-[var(--zcanopy-surface)]">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-gray-500 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <span
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-sm font-bold text-white"
-              style={{ backgroundColor: COLORS.accentGold, color: COLORS.cardBrown }}
-            >
-              Z
-            </span>
-            <span className="font-semibold" style={{ color: COLORS.cardBrown }}>ZCanopy</span>
-          </div>
-          <p>© {new Date().getFullYear()} ZCanopy. All rights reserved.</p>
-          <div className="flex gap-5">
-            <Link href="/login" className="hover:text-[var(--zcanopy-primary)]">Admin</Link>
-            <Link href="/brokers/signup" className="hover:text-[var(--zcanopy-primary)]">Brokers</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
 
 function PropertyShowcase() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data, loading } = useAdminData((token) => adminApi.featuredProperties());
+  const { data, loading } = usePublicData(() => adminApi.featuredProperties());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const properties: any[] = data?.properties ?? [];
   const [index, setIndex] = useState(0);
@@ -415,7 +408,7 @@ function PropertyShowcase() {
               className="mt-4 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow transition-opacity hover:opacity-90"
               style={{ backgroundColor: COLORS.primary }}
             >
-              Your home awaits your call
+              Your property awaits your call
             </button>
           </div>
         </div>
@@ -430,5 +423,130 @@ function PropertyShowcase() {
         style={{ backgroundColor: `${COLORS.accentGold}33` }}
       />
     </div>
+  );
+}
+
+function GlowFallingText({ text }: { text: string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+
+    function resize() {
+      const w = canvas!.clientWidth;
+      const h = canvas!.clientHeight;
+      canvas!.width = w * dpr;
+      canvas!.height = h * dpr;
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { w, h };
+    }
+
+    let { w, h } = resize();
+
+    const fontSize = Math.max(22, Math.min(46, w / 22));
+    ctx.font = `bold ${fontSize}px 'Arial Black', Impact, sans-serif`;
+
+    const HOLD = 90;
+    const START_GAP = 6;
+
+    let letters: {
+      char: string;
+      x: number;
+      targetY: number;
+      speed: number;
+      startFrame: number;
+      y: number;
+      held: number;
+    }[] = [];
+
+    function build() {
+      letters = [];
+      ctx!.font = `bold ${fontSize}px 'Arial Black', Impact, sans-serif`;
+      const totalWidth = ctx!.measureText(text).width;
+      let currentX = (w - totalWidth) / 2;
+      const targetY = h / 2;
+      for (let i = 0; i < text.length; i++) {
+        const charWidth = ctx!.measureText(text[i]).width;
+        letters.push({
+          char: text[i],
+          x: currentX,
+          targetY,
+          speed: 4 + Math.random() * 3,
+          startFrame: i * START_GAP,
+          y: -100 - i * 20,
+          held: 0,
+        });
+        currentX += charWidth;
+      }
+    }
+    build();
+
+    let frame = 0;
+    let raf = 0;
+
+    function animate() {
+      ctx!.clearRect(0, 0, w, h);
+      frame++;
+      letters.forEach((l) => {
+        if (frame < l.startFrame) {
+          l.y = -100 - Math.random() * 200;
+        } else if (l.y < l.targetY) {
+          l.y += l.speed;
+        } else {
+          l.held++;
+          if (l.held > HOLD) {
+            l.y = -100 - Math.random() * 120;
+            l.held = 0;
+          }
+        }
+
+        const wave = Math.sin((frame - l.startFrame) * 0.1);
+        const glowRadius = wave > 0 ? wave * 25 : 0;
+        const scale = 1 + (wave > 0 ? wave * 0.05 : 0);
+
+        ctx!.save();
+        ctx!.translate(l.x, l.y);
+        ctx!.scale(scale, scale);
+
+        for (let i = 8; i > 0; i--) {
+          ctx!.fillStyle = `rgba(160, 130, 0, ${1 - i / 8})`;
+          ctx!.fillText(l.char, -i, i);
+        }
+
+        ctx!.shadowColor = "rgba(255, 235, 0, 1)";
+        ctx!.shadowBlur = glowRadius;
+        ctx!.fillStyle = "#FFFF00";
+        ctx!.fillText(l.char, 0, 0);
+        ctx!.restore();
+      });
+      raf = requestAnimationFrame(animate);
+    }
+    animate();
+
+    function onResize() {
+      const dims = resize();
+      w = dims.w;
+      h = dims.h;
+      build();
+    }
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [text]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="block h-full w-full"
+      aria-label={text}
+    />
   );
 }

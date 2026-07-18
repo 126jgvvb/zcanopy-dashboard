@@ -9,8 +9,6 @@
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
-
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -41,15 +39,27 @@ function buildUrl(path: string, query?: RequestOptions["query"]): string {
   return url.toString();
 }
 
+/**
+ * A server request only falls back to mock data when the server itself is
+ * unreachable or failing:
+ *   - a network/connection error (fetch throws), or
+ *   - a 5xx server error.
+ *
+ * Client errors (4xx such as 401/403/404/400) are surfaced as real errors so
+ * genuine problems are never masked by mock data.
+ */
+function shouldUseFallback(err: unknown): boolean {
+  // Network / connection failure (server down, CORS, DNS, offline).
+  if (!(err instanceof ApiError)) return true;
+  // Server-side failure.
+  return err.status >= 500 || err.status === 0;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function apiFetch<T = any>(
   path: string,
   { method = "GET", body, token, query, fallback }: RequestOptions = {},
 ): Promise<T> {
-  if (USE_MOCK && fallback !== undefined) {
-    return fallback as T;
-  }
-
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -81,7 +91,14 @@ export async function apiFetch<T = any>(
 
     return data as T;
   } catch (err) {
-    if (fallback !== undefined) {
+    // Only fall back to mock data when the server is actually down/failing,
+    // not for client errors (auth, validation, not-found, etc.).
+    if (fallback !== undefined && shouldUseFallback(err)) {
+      if (typeof console !== "undefined") {
+        console.warn(
+          `[api] Server request to "${path}" failed (${err instanceof ApiError ? err.status : "network error"}). Falling back to mock data.`,
+        );
+      }
       return fallback as T;
     }
     throw err;

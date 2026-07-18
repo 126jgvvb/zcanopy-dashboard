@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OnboardingShell, PrimaryButton } from "@/components/Onboarding";
 import { adminApi, ApiError } from "@/lib/api";
@@ -52,7 +52,7 @@ function OtpRow({
   );
 }
 
-export default function BrokerVerifyPage() {
+function BrokerVerifyPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") ?? "";
@@ -163,5 +163,13 @@ export default function BrokerVerifyPage() {
         </button>
       </div>
     </OnboardingShell>
+  );
+}
+
+export default function BrokerVerifyPage() {
+  return (
+    <Suspense fallback={null}>
+      <BrokerVerifyPageInner />
+    </Suspense>
   );
 }

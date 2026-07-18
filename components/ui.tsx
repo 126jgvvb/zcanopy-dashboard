@@ -56,6 +56,46 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
   return { data, error, loading, reload };
 }
 
+/**
+ * Like useAdminData but for public (unauthenticated) endpoints such as the
+ * landing page's featured listings. It always attempts the real server first;
+ * the underlying apiFetch only falls back to mock data when the server is
+ * unreachable or failing (see lib/api.ts).
+ */
+export function usePublicData<T>(fetcher: (token: string) => Promise<T>, deps: unknown[] = []) {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const fetcherRef = useRef(fetcher);
+
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  });
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    fetcherRef.current("")
+      .then((result) => {
+        if (active) setData(result);
+      })
+      .catch((err) => {
+        if (active)
+          setError(err instanceof ApiError ? err.message : "Failed to load data.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  return { data, error, loading };
+}
+
 export function Panel({
   title,
   action,

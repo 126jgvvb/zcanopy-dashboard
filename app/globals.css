@@ -22,14 +22,19 @@
   --color-zcanopy-surface: var(--zcanopy-surface);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --animate-letter-drop: letterDrop 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f0f0f;
-    --foreground: #e5e5e5;
-    --zcanopy-surface: #1a1a1a;
-  }
+/* Manual dark theme, toggled via the `dark` class on <html>. */
+html.dark {
+  --background: #0f0f0f;
+  --foreground: #e5e5e5;
+  --zcanopy-surface: #1a1a1a;
+}
+
+/* Smooth transition when toggling themes. */
+html {
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 * {
@@ -54,19 +59,17 @@ select {
   color: var(--foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  input,
-  textarea,
-  select {
-    background-color: #262626;
-    border-color: #404040;
-    color: #e5e5e5;
-  }
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #262626;
+  border-color: #404040;
+  color: #e5e5e5;
+}
 
-  input::placeholder,
-  textarea::placeholder {
-    color: #a3a3a3;
-  }
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #a3a3a3;
 }
 
 .line-clamp-2 {
@@ -94,4 +97,23 @@ select {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes letterDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-120px) rotateX(-90deg) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(14px) rotateX(18deg) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg) scale(1);
+  }
+}
+
+.letter-drop {
+  animation: var(--animate-letter-drop);
 }

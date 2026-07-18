@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import Sidebar from "@/components/Sidebar";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
+import ThemeToggle from "@/components/ThemeToggle";
 import { COLORS } from "@/lib/theme";
 
 export default function DashboardLayout({
@@ -36,6 +37,7 @@ export default function DashboardLayout({
             <h1 className="text-xl font-bold text-[var(--zcanopy-card-brown)]">ZCanopy Admin</h1>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <div className="text-right">
               <p className="text-sm font-semibold">{admin.username}</p>
               <p className="text-xs text-gray-500 capitalize">{admin.role.replace("_", " ")}</p>

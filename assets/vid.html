@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Glowing Falling Text</title>
+    <style>
+        body { margin: 0; background: #050505; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial Black', Impact, sans-serif; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="textCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('textCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const text = "let zcanopy deliver the property to you";
+        const words = text.split(' ');
+        
+        let letters = [];
+        let fontSize = 48;
+        ctx.font = `bold ${fontSize}px 'Arial Black', Impact`;
+        
+        // Calculate starting positions to center text
+        let totalWidth = ctx.measureText(text).width;
+        let startX = (canvas.width - totalWidth) / 2;
+        let currentX = startX;
+
+        // Initialize letters
+        for (let i = 0; i < text.length; i++) {
+            let charWidth = ctx.measureText(text[i]).width;
+            letters.push({
+                char: text[i],
+                x: currentX,
+                y: -100 - (i * 20), // Staggered falling start
+                targetY: canvas.height / 2,
+                speed: 4 + Math.random() * 3,
+                delay: i * 4 // Wave timing for the pulse
+            });
+            currentX += charWidth;
+        }
+
+        let frame = 0;
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frame++;
+
+            letters.forEach((l, index) => {
+                // Falling physics
+                if (l.y < l.targetY) {
+                    l.y += l.speed;
+                } else {
+                    l.y = l.targetY; // Lock at center
+                }
+
+                // Pulsating glowing wave math
+                let wave = Math.sin((frame - l.delay) * 0.1);
+                let glowRadius = wave > 0 ? wave * 25 : 0;
+                let scale = 1 + (wave > 0 ? wave * 0.05 : 0);
+
+                ctx.save();
+                ctx.translate(l.x, l.y);
+                ctx.scale(scale, scale);
+
+                // 3D Extrusion Effect (Layers)
+                for (let i = 8; i > 0; i--) {
+                    ctx.fillStyle = `rgba(160, 130, 0, ${1 - i/8})`; // Dark gold shadow
+                    ctx.fillText(l.char, -i, i);
+                }
+
+                // Neon Glow Properties
+                ctx.shadowColor = "rgba(255, 235, 0, 1)";
+                ctx.shadowBlur = glowRadius;
+
+                // Front Face text
+                ctx.fillStyle = "#FFFF00"; // Pure Yellow
+                ctx.fillText(l.char, 0, 0);
+                ctx.restore();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
