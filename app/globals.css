@@ -84,3 +84,14 @@ select {
   background-color: #D1A054 !important;
   color: #ffffff !important;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

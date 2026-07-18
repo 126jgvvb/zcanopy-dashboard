@@ -159,4 +159,12 @@ export const mockData = {
   }),
   notifications: (query = {}) => ({ notifications: [], total: 0, ...query }),
   propertyLocations: () => ({ locations: MOCK_PROPERTY_LOCATIONS }),
+  featuredProperties: () => ({
+    properties: [
+      { id: "p1", title: "2BR Apartment in Kololo", description: "Modern apartment with shared pool, balcony & 24/7 security.", propertyType: "apartment", location: "Kololo, Kampala", brokerCode: "BRK-001", price: 850000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/a9710e/ffffff?text=Kololo+Apartment", isAvailable: true },
+      { id: "p2", title: "3BR Villa in Muyenga", description: "Spacious family villa with garden, double garage & maid's quarter.", propertyType: "villa", location: "Muyenga, Kampala", brokerCode: "BRK-002", price: 1500000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/5d4037/ffffff?text=Muyenga+Villa", isAvailable: true },
+      { id: "p4", title: "Land Plot in Kira", description: "Residential land for sale, surveyed and ready for title processing.", propertyType: "land", location: "Kira, Wakiso", brokerCode: "BRK-001", price: 420000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/d1a054/5d4037?text=Kira+Land", isAvailable: true },
+      { id: "p5", title: "1BR Studio in Ntinda", description: "Cozy studio apartment, ideal for young professionals. Gated community.", propertyType: "apartment", location: "Ntinda, Kampala", brokerCode: "BRK-003", price: 320000, priceLabel: "Booking", imageUrl: "https://placehold.co/640x420/a9610e/ffffff?text=Ntinda+Studio", isAvailable: true },
+    ],
+  }),
 };

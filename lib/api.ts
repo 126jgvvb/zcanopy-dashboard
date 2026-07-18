@@ -276,6 +276,9 @@ export const adminApi = {
       body: { email, phoneNumber, emailCode, phoneCode },
       fallback: { success: true, message: "Verified (mock)" },
     }),
+
+  featuredProperties: () =>
+    apiFetch("/public/properties/featured", { fallback: mockData.featuredProperties() }),
 };
 
 export const authApi = {

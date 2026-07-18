@@ -1,8 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useAdminData } from "@/components/ui";
+import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
+
+function formatUGX(n: number) {
+  try {
+    return new Intl.NumberFormat("en-UG", { style: "currency", currency: "UGX", maximumFractionDigits: 0 }).format(n);
+  } catch {
+    return `UGX ${n.toLocaleString()}`;
+  }
+}
 
 const FEATURES = [
   {
@@ -66,13 +77,6 @@ export default function LandingPage() {
             <a href="#how" className="hover:text-[var(--zcanopy-primary)]">How it works</a>
             <a href="#stats" className="hover:text-[var(--zcanopy-primary)]">Impact</a>
           </nav>
-          <Link
-            href="/login"
-            className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow transition-opacity hover:opacity-90"
-            style={{ backgroundColor: COLORS.primary }}
-          >
-            Admin console
-          </Link>
         </div>
       </header>
 
@@ -117,45 +121,32 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="relative">
-            <div
-              className="rounded-3xl bg-[var(--zcanopy-surface)] p-6 shadow-2xl"
-              style={{ border: `1px solid ${COLORS.accentGold}55` }}
+          <PropertyShowcase />
+        </div>
+      </section>
+
+      {/* Full-width video */}
+      <section className="relative">
+        <div className="mx-auto max-w-6xl px-6 py-12">
+          <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
+            <video
+              className="h-[320px] w-full object-cover sm:h-[440px]"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              poster="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1600&q=70"
             >
-              <div className="flex items-center gap-3">
-                <span
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl text-xl font-bold text-white shadow"
-                  style={{ backgroundColor: COLORS.accentGold, color: COLORS.cardBrown }}
-                >
-                  Z
-                </span>
-                <div>
-                  <p className="font-semibold" style={{ color: COLORS.cardBrown }}>ZCanopy Console</p>
-                  <p className="text-xs text-gray-400">Live broker activity</p>
-                </div>
-              </div>
-              <div className="mt-5 space-y-3">
-                {[
-                  { t: "New booking · Kololo Apartment", s: "UGX 850,000", c: "#16a34a" },
-                  { t: "Subscription · Fibrous tier", s: "UGX 1,250,000", c: COLORS.primary },
-                  { t: "Broker verified · BRK-004", s: "Approved", c: "#16a34a" },
-                  { t: "Invoice sent · INV-2026-006", s: "UGX 850,000", c: COLORS.accentGold },
-                ].map((row, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5">
-                    <span className="text-sm text-gray-600">{row.t}</span>
-                    <span className="text-sm font-semibold" style={{ color: row.c }}>{row.s}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 flex items-center justify-center">
-                <ZLoadingIndicator size={28} color={COLORS.primary} />
-              </div>
-            </div>
-            <div
-              className="absolute -bottom-6 -left-6 hidden h-28 w-28 rounded-2xl sm:block"
-              style={{ backgroundColor: `${COLORS.accentGold}33` }}
-            />
+              <source
+                src="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+                type="video/mp4"
+              />
+            </video>
           </div>
+          <p className="mt-4 text-center text-sm text-gray-500">
+            Discover homes across Uganda — tours, bookings, and verified brokers, all in one place.
+          </p>
         </div>
       </section>
 
@@ -168,6 +159,72 @@ export default function LandingPage() {
               <p className="mt-1 text-sm text-gray-500">{s.label}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Payment flow */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <span
+            className="inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+            style={{ backgroundColor: `${COLORS.accentGold}22`, color: COLORS.primary }}
+          >
+            Payments
+          </span>
+          <h2 className="mt-4 text-3xl font-bold" style={{ color: COLORS.cardBrown }}>
+            A payment flow you can trust
+          </h2>
+          <p className="mt-3 text-gray-600">
+            From booking to payout, every shilling moves through secure, locally trusted rails.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-4">
+          {[
+            { n: "01", t: "Book & pay", d: "Clients pay booking fees and subscriptions instantly via mobile money." },
+            { n: "02", t: "Escrow hold", d: "Funds are secured and reconciled automatically against the transaction." },
+            { n: "03", t: "Commission split", d: "The platform commission is calculated and the broker's share is earmarked." },
+            { n: "04", t: "Payout", d: "Verified brokers withdraw earnings straight to their mobile money wallet." },
+          ].map((s) => (
+            <div key={s.n} className="rounded-2xl bg-[var(--zcanopy-surface)] p-6 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.05)" }}>
+              <span className="text-3xl font-bold" style={{ color: COLORS.accentGold }}>{s.n}</span>
+              <h3 className="mt-3 text-base font-semibold" style={{ color: COLORS.cardBrown }}>{s.t}</h3>
+              <p className="mt-2 text-sm text-gray-600">{s.d}</p>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="mt-10 overflow-hidden rounded-3xl p-8 sm:p-10"
+          style={{ background: `linear-gradient(135deg, ${COLORS.cardBrown}, ${COLORS.primary})` }}
+        >
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white">Carriers we support today</h3>
+              <p className="mt-2 max-w-md text-sm text-white/80">
+                ZCanopy settles payments through Uganda&apos;s most widely used mobile money networks,
+                with card and bank rails on the roadmap.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {[
+                { name: "MTN MoMo", logo: "https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg" },
+                { name: "Airtel Money", logo: "https://upload.wikimedia.org/wikipedia/commons/d/da/Airtel_Africa_logo.svg" },
+              ].map((c) => (
+                <span
+                  key={c.name}
+                  className="flex items-center gap-2 rounded-2xl bg-white/95 px-4 py-2.5 shadow"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={c.logo}
+                    alt={c.name}
+                    className="h-7 w-auto object-contain"
+                  />
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -262,5 +319,116 @@ export default function LandingPage() {
         </div>
       </footer>
     </main>
+  );
+}
+
+function PropertyShowcase() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data, loading } = useAdminData((token) => adminApi.featuredProperties());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const properties: any[] = data?.properties ?? [];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (properties.length <= 1) return;
+    const t = setInterval(() => setIndex((i) => (i + 1) % properties.length), 4500);
+    return () => clearInterval(t);
+  }, [properties.length]);
+
+  const active = properties[index];
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-3xl bg-[var(--zcanopy-surface)] p-3 shadow-2xl"
+      style={{ border: `1px solid ${COLORS.accentGold}55` }}
+    >
+      <div className="flex items-center justify-between px-2 pb-2 pt-1">
+        <div className="flex items-center gap-2">
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-sm font-bold text-white"
+            style={{ backgroundColor: COLORS.accentGold, color: COLORS.cardBrown }}
+          >
+            Z
+          </span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Featured listings
+          </span>
+        </div>
+        <span className="flex gap-1.5">
+          {properties.map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Go to slide ${i + 1}`}
+              onClick={() => setIndex(i)}
+              className="h-1.5 rounded-full transition-all"
+              style={{
+                width: i === index ? 22 : 8,
+                backgroundColor: i === index ? COLORS.primary : "#e5e5e5",
+              }}
+            />
+          ))}
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="flex h-[360px] items-center justify-center">
+          <ZLoadingIndicator size={36} color={COLORS.primary} />
+        </div>
+      ) : active ? (
+        <div key={active.id} className="animate-[fadeIn_0.5s_ease]">
+          <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-gray-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={active.imageUrl}
+              alt={active.title}
+              className="h-full w-full object-cover"
+            />
+            <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold capitalize text-gray-700 shadow">
+              {active.propertyType}
+            </span>
+            {active.isAvailable ? (
+              <span className="absolute right-3 top-3 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 shadow">
+                Available
+              </span>
+            ) : null}
+          </div>
+
+          <div className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: COLORS.cardBrown }}>
+                  {active.title}
+                </h3>
+                <p className="mt-0.5 text-xs text-gray-400">📍 {active.location}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wide text-gray-400">{active.priceLabel}</p>
+                <p className="text-lg font-bold" style={{ color: COLORS.primary }}>
+                  {formatUGX(active.price)}
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-2 line-clamp-2 text-sm text-gray-600">{active.description}</p>
+
+            <button
+              className="mt-4 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow transition-opacity hover:opacity-90"
+              style={{ backgroundColor: COLORS.primary }}
+            >
+              Your home awaits your call
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex h-[360px] items-center justify-center text-sm text-gray-400">
+          No listings available.
+        </div>
+      )}
+
+      <div
+        className="absolute -bottom-6 -left-6 hidden h-28 w-28 rounded-2xl sm:block"
+        style={{ backgroundColor: `${COLORS.accentGold}33` }}
+      />
+    </div>
   );
 }
