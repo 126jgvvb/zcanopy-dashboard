@@ -6,10 +6,14 @@ import { useAuth } from "@/components/AuthProvider";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi, ApiError } from "@/lib/api";
 import { can, COLORS } from "@/lib/theme";
+import { RecipientPicker, type RecipientOption } from "@/components/RecipientPicker";
 
 export default function MessagesPage() {
   const { admin } = useAuth();
   const [liveTick, setLiveTick] = useState(0);
+  const [brokers, setBrokers] = useState<RecipientOption[]>([]);
+  const [customers, setCustomers] = useState<RecipientOption[]>([]);
+  const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => setLiveTick((t) => t + 1), 15000);
@@ -22,6 +26,31 @@ export default function MessagesPage() {
     adminApi.notifications(token, { limit: 15 }),
     [liveTick],
   );
+
+  useEffect(() => {
+    setLoadingRecipients(true);
+    Promise.all([
+      adminApi.brokers(admin!.token, 1, 100).catch(() => ({ brokers: [] })),
+      adminApi.clientMessages(admin!.token, 1, 100).catch(() => ({ messages: [] })),
+    ]).then(([brokersData, clientsData]) => {
+      const brokerOptions: RecipientOption[] = (brokersData.brokers ?? []).map((b: any) => ({
+        id: b.id,
+        name: b.username,
+        email: b.email,
+        phone: b.phoneNumber,
+        type: "broker" as const,
+      }));
+      const customerOptions: RecipientOption[] = (clientsData.messages ?? []).map((m: any) => ({
+        id: m.id,
+        name: m.senderName,
+        phone: m.senderPhone,
+        type: "customer" as const,
+      }));
+      setBrokers(brokerOptions);
+      setCustomers(customerOptions);
+      setLoadingRecipients(false);
+    });
+  }, [admin]);
 
   const canManage = can(admin?.role, "manage_messages");
 
@@ -108,15 +137,15 @@ export default function MessagesPage() {
         )}
       </Panel>
 
-      {canManage ? <SendMessageComposer /> : null}
+      {canManage ? <SendMessageComposer brokers={brokers} customers={customers} loadingRecipients={loadingRecipients} /> : null}
     </div>
   );
 }
 
-function SendMessageComposer() {
+function SendMessageComposer({ brokers, customers, loadingRecipients }: { brokers: RecipientOption[]; customers: RecipientOption[]; loadingRecipients: boolean }) {
   const { admin } = useAuth();
-  const [recipientType, setRecipientType] = useState("broker");
-  const [recipient, setRecipient] = useState("");
+  const [recipientType, setRecipientType] = useState<"broker" | "customer">("broker");
+  const [selectedRecipient, setSelectedRecipient] = useState<RecipientOption | null>(null);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [channel, setChannel] = useState<"email" | "sms">("email");
@@ -134,9 +163,9 @@ function SendMessageComposer() {
         adminId: admin!.id,
         adminUsername: admin!.username,
         recipientType,
-        recipientEmail: channel === "email" ? recipient : undefined,
-        recipientPhone: channel === "sms" ? recipient : undefined,
-        recipientName: recipient,
+        recipientEmail: channel === "email" ? selectedRecipient?.email : undefined,
+        recipientPhone: channel === "sms" ? selectedRecipient?.phone : undefined,
+        recipientName: selectedRecipient?.name || selectedRecipient?.id || "",
         messageType: "custom",
         subject,
         body,
@@ -145,7 +174,7 @@ function SendMessageComposer() {
       setDone("Message queued successfully.");
       setSubject("");
       setBody("");
-      setRecipient("");
+      setSelectedRecipient(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to send.");
     } finally {
@@ -153,13 +182,18 @@ function SendMessageComposer() {
     }
   }
 
+  const recipientOptions = recipientType === "broker" ? brokers : customers;
+
   return (
     <Panel title="Send Message">
       <form onSubmit={handleSend} className="max-w-xl space-y-3">
         <div className="flex gap-3">
           <select
             value={recipientType}
-            onChange={(e) => setRecipientType(e.target.value)}
+            onChange={(e) => {
+              setRecipientType(e.target.value as "broker" | "customer");
+              setSelectedRecipient(null);
+            }}
             className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--zcanopy-primary)]"
           >
             <option value="broker">Broker</option>
@@ -174,13 +208,15 @@ function SendMessageComposer() {
             <option value="sms">SMS</option>
           </select>
         </div>
-        <input
-          required
-          value={recipient}
-          onChange={(e) => setRecipient(e.target.value)}
-          placeholder={channel === "email" ? "Recipient email" : "Recipient phone"}
-          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--zcanopy-primary)] transition-colors"
+
+        <RecipientPicker
+          recipientType={recipientType}
+          value={selectedRecipient?.id || ""}
+          onChange={(id, option) => setSelectedRecipient(option)}
+          options={recipientOptions}
+          loading={loadingRecipients}
         />
+
         <input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
@@ -199,7 +235,7 @@ function SendMessageComposer() {
         {done ? <p className="text-sm text-green-600">{done}</p> : null}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !selectedRecipient}
           className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-90 disabled:opacity-60"
           style={{ backgroundColor: COLORS.primary }}
         >

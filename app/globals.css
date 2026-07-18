@@ -75,3 +75,12 @@ select {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.hover-gold {
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-gold:hover {
+  background-color: #D1A054 !important;
+  color: #ffffff !important;
+}

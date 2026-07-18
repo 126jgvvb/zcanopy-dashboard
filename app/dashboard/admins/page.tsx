@@ -76,11 +76,19 @@ export default function AdminsPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {(admins.data?.admins ?? []).map((a: any) => (
-                  <tr key={a.id} className="hover:bg-gray-50">
+                   <tr key={a.id} className="hover:bg-[#D1A054]/5 transition-colors">
                     <td className="py-2.5 pr-4 font-medium">{a.username}</td>
                     <td className="py-2.5 pr-4 text-gray-500">{a.email}</td>
                     <td className="py-2.5 pr-4">
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          a.role === "super_admin"
+                            ? "bg-purple-100 text-purple-700"
+                            : a.role === "admin"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
                         {ROLE_LABELS[a.role] ?? a.role}
                       </span>
                     </td>
@@ -110,7 +118,7 @@ export default function AdminsPage() {
                                 ),
                               )
                             }
-                            className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-medium hover:bg-gray-200"
+                            className="hover-gold rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700"
                           >
                             {a.isActive ? "Freeze" : "Unfreeze"}
                           </button>
@@ -121,7 +129,7 @@ export default function AdminsPage() {
                                 adminApi.deleteAdmin(admin!.token, a.id, admin!.id),
                               )
                             }
-                            className="rounded-lg bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
+                            className="hover-gold rounded-lg bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700"
                           >
                             Delete
                           </button>

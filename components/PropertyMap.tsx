@@ -69,7 +69,7 @@ export function PropertyMap({ locations }: { locations: PropertyLocation[] }) {
 
         <circle cx={width / 2} cy={height / 2} r={Math.max(width, height) * 0.6} fill="url(#mapGlow)" />
 
-        {points.map((p, i) => {
+        {points.map((p) => {
           const x = toX(p.geo.lng);
           const y = toY(p.geo.lat);
           return (

@@ -44,7 +44,7 @@ export default function TransactionsPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {(tx.data?.transactions ?? []).map((t: any) => (
-                  <tr key={t.id} className="hover:bg-gray-50">
+                  <tr key={t.id} className="hover:bg-[#D1A054]/5 transition-colors">
                     <td className="py-2.5 pr-4 text-gray-500">
                       {t.date ? new Date(t.date).toLocaleDateString() : "—"}
                     </td>
@@ -54,7 +54,15 @@ export default function TransactionsPage() {
                       {currency(t.amount)}
                     </td>
                     <td className="py-2.5 pr-4">
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          t.status === "completed"
+                            ? "bg-green-100 text-green-700"
+                            : t.status === "pending"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {t.status}
                       </span>
                     </td>
@@ -73,15 +81,15 @@ export default function TransactionsPage() {
         <button
           disabled={page <= 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="rounded-lg bg-white px-3 py-1.5 text-sm disabled:opacity-50"
+          className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
         >
           Previous
         </button>
-        <span className="px-2 py-1.5 text-sm text-gray-500">Page {page}</span>
+        <span className="px-3 py-2 text-sm text-gray-500">Page {page}</span>
         <button
           disabled={(tx.data?.transactions?.length ?? 0) < 20}
           onClick={() => setPage((p) => p + 1)}
-          className="rounded-lg bg-white px-3 py-1.5 text-sm disabled:opacity-50"
+          className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
         >
           Next
         </button>

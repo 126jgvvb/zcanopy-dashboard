@@ -242,7 +242,7 @@ function BrokerTable({
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => onView(b.id)}
-                    className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-[var(--zcanopy-accent-gold)] hover:text-white transition-colors"
+                    className="hover-gold rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700"
                   >
                     View
                   </button>
@@ -251,7 +251,7 @@ function BrokerTable({
                       <button
                         disabled={acting === `appr-${b.id}`}
                         onClick={() => onApprove?.(b.id)}
-                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-90 disabled:opacity-60"
+                        className="hover-gold rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
                         style={{ backgroundColor: COLORS.primary }}
                       >
                         Approve
@@ -259,7 +259,7 @@ function BrokerTable({
                       <button
                         disabled={acting === `rej-${b.id}`}
                         onClick={() => onReject?.(b.id)}
-                        className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200 transition-colors"
+                        className="hover-gold rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-60"
                       >
                         Reject
                       </button>
@@ -269,7 +269,7 @@ function BrokerTable({
                     <button
                       disabled={acting === `del-${b.id}`}
                       onClick={() => onDelete(b.id)}
-                      className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200 transition-colors"
+                      className="hover-gold rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-60"
                     >
                       Delete
                     </button>

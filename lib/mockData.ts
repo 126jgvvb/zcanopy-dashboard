@@ -66,6 +66,15 @@ const MOCK_SESSIONS = [
   { sessionId: "sess-003", deviceId: "dev-ghi-789", createdAt: 1752627200000, lastActivityAt: 1752783600000, locationLat: -0.0917, locationLng: 31.4636, locationUpdatedAt: 1752783600000, ttlSecondsRemaining: 7200 },
 ];
 
+const MOCK_INVOICES = [
+  { id: "inv1", invoiceNumber: "INV-2026-001", recipientName: "Alice Namuli", recipientEmail: "alice@example.com", brokerCode: "BRK-001", issueDate: "2026-07-01T00:00:00Z", dueDate: "2026-07-15T00:00:00Z", amount: 1250000, currency: "UGX", status: "sent", description: "Subscription - Fibrous tier (July)" },
+  { id: "inv2", invoiceNumber: "INV-2026-002", recipientName: "David Ssempala", recipientEmail: "david@example.com", brokerCode: "BRK-004", issueDate: "2026-07-01T00:00:00Z", dueDate: "2026-07-15T00:00:00Z", amount: 1250000, currency: "UGX", status: "sent", description: "Subscription - Fibrous tier (July)" },
+  { id: "inv3", invoiceNumber: "INV-2026-003", recipientName: "Brian Ochieng", recipientEmail: "brian@example.com", brokerCode: "BRK-002", issueDate: "2026-07-01T00:00:00Z", dueDate: "2026-07-15T00:00:00Z", amount: 800000, currency: "UGX", status: "pending", description: "Subscription - Buttress tier (July)" },
+  { id: "inv4", invoiceNumber: "INV-2026-004", recipientName: "Carol Atim", recipientEmail: "carol@example.com", brokerCode: "BRK-003", issueDate: "2026-07-01T00:00:00Z", dueDate: "2026-07-15T00:00:00Z", amount: 300000, currency: "UGX", status: "failed", description: "Subscription - Prop tier (July)" },
+  { id: "inv5", invoiceNumber: "INV-2026-005", recipientName: "Eva Nakato", recipientEmail: "eva@example.com", brokerCode: "BRK-005", issueDate: "2026-06-01T00:00:00Z", dueDate: "2026-06-15T00:00:00Z", amount: 800000, currency: "UGX", status: "sent", description: "Subscription - Buttress tier (June)" },
+  { id: "inv6", invoiceNumber: "INV-2026-006", recipientName: "Alice Namuli", recipientEmail: "alice@example.com", brokerCode: "BRK-001", issueDate: "2026-07-10T00:00:00Z", dueDate: "2026-07-24T00:00:00Z", amount: 850000, currency: "UGX", status: "pending", description: "Featured listing - Kololo Apartment" },
+];
+
 const MOCK_INCOME = [
   { month: "Jan", income: 4500000 },
   { month: "Feb", income: 5200000 },
@@ -93,6 +102,10 @@ export const mockData = {
         ...broker,
         bio: `Experienced real estate professional with over ${Math.floor(Math.random() * 10 + 2)} years in the industry. Specializes in residential and commercial properties across Uganda.`,
         subscriptionExpiresAt: broker.subscriptionTier === 'prop' ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        legalName: broker.username,
+        idNumber: `CM${Math.floor(10000000 + Math.random() * 89999999)}`,
+        idFrontUrl: "https://placehold.co/600x380/ece5d8/5d4037?text=National+ID+Front",
+        idBackUrl: "https://placehold.co/600x380/ece5d8/5d4037?text=National+ID+Back",
       },
       walletBalance: broker.walletBalance,
       transactions: MOCK_TRANSACTIONS.slice(0, 5),
@@ -131,7 +144,19 @@ export const mockData = {
   income: () => ({ entries: MOCK_INCOME }),
   commission: () => ({ platformCommission: 18500000, bookingCommission: 4200000, totalEarnings: 22700000 }),
   currentCommission: () => ({ platformCommission: 18500000, bookingCommission: 4200000, totalEarnings: 22700000 }),
+  brokerCommissions: () => ({
+    commissions: [
+      { brokerId: "b1", brokerCode: "BRK-001", brokerName: "Alice Namuli", tier: "fibrous", totalCommission: 4500000, transactionCount: 12, totalBookings: 18500000 },
+      { brokerId: "b2", brokerCode: "BRK-002", brokerName: "Brian Ochieng", tier: "buttress", totalCommission: 3200000, transactionCount: 8, totalBookings: 12800000 },
+      { brokerId: "b4", brokerCode: "BRK-004", brokerName: "David Ssempala", tier: "fibrous", totalCommission: 8900000, transactionCount: 24, totalBookings: 35000000 },
+      { brokerId: "b5", brokerCode: "BRK-005", brokerName: "Eva Nakato", tier: "buttress", totalCommission: 6100000, transactionCount: 15, totalBookings: 24500000 },
+    ],
+  }),
   wallet: () => ({ balance: 15000000, currency: "UGX", walletId: "plat-comm-1", name: "Platform Commission Wallet" }),
+  invoices: (status?: string) => ({
+    invoices: status ? MOCK_INVOICES.filter((i) => i.status === status) : MOCK_INVOICES,
+    total: status ? MOCK_INVOICES.filter((i) => i.status === status).length : MOCK_INVOICES.length,
+  }),
   notifications: (query = {}) => ({ notifications: [], total: 0, ...query }),
   propertyLocations: () => ({ locations: MOCK_PROPERTY_LOCATIONS }),
 };

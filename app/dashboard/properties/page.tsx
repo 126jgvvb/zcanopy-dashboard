@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
-import { PropertyMap, type PropertyLocation } from "@/components/PropertyMap";
+import { GoogleMap, type PropertyLocation } from "@/components/GoogleMap";
 
 const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; maxVideos: number; maxVideoSizeMB: number }> = {
   fibrous: { maxProperties: 12, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
@@ -62,10 +62,10 @@ export default function PropertiesPage() {
       <div className="flex gap-2">
         <button
           onClick={() => setMapTab("map")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+          className={`hover-gold rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
             mapTab === "map"
               ? "text-white shadow-md"
-              : "bg-white text-gray-600 hover:bg-gray-100"
+              : "bg-white text-gray-700"
           }`}
           style={mapTab === "map" ? { backgroundColor: COLORS.primary } : {}}
         >
@@ -73,10 +73,10 @@ export default function PropertiesPage() {
         </button>
         <button
           onClick={() => setMapTab("grid")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+          className={`hover-gold rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
             mapTab === "grid"
               ? "text-white shadow-md"
-              : "bg-white text-gray-600 hover:bg-gray-100"
+              : "bg-white text-gray-700"
           }`}
           style={mapTab === "grid" ? { backgroundColor: COLORS.primary } : {}}
         >
@@ -91,7 +91,7 @@ export default function PropertiesPage() {
           ) : locations.error ? (
             <ErrorState message={locations.error} />
           ) : (
-            <PropertyMap locations={mappedLocations} />
+            <GoogleMap locations={mappedLocations} />
           )}
         </Panel>
       ) : (
@@ -106,71 +106,91 @@ export default function PropertiesPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((p: any) => {
                 const limits = TIER_LIMITS[p.brokerTier?.toLowerCase?.()] ?? TIER_LIMITS.prop;
-                const photoPct = Math.min(100, Math.round(((p.photoCount ?? 0) / limits.maxPhotos) * 100));
-                const videoPct = Math.min(100, Math.round(((p.videoCount ?? 0) / limits.maxVideos) * 100));
                 return (
                   <div
                     key={p.id}
-                    className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-[var(--zcanopy-accent-gold)]"
+                    className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md hover:border-[var(--zcanopy-accent-gold)]"
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-semibold text-gray-800">{p.title}</p>
-                        <p className="mt-1 text-xs text-gray-400">{p.location}</p>
+                    <div className="relative h-48 w-full overflow-hidden rounded-t-2xl bg-gray-100">
+                      <div className="flex h-full w-full items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-4xl">🏠</div>
+                          <p className="mt-2 text-xs text-gray-400">Property Image</p>
+                        </div>
                       </div>
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${p.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                        {p.isAvailable ? "Available" : "Unavailable"}
-                      </span>
+                      <div className="absolute right-2 top-2">
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${p.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                          {p.isAvailable ? "Available" : "Unavailable"}
+                        </span>
+                      </div>
                     </div>
-                    <p className="mt-3 text-xs leading-relaxed text-gray-500 line-clamp-2">
-                      {p.description}
-                    </p>
-                    <div className="mt-4 space-y-2.5">
-                      <div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">Photos</span>
-                          <span className="font-medium text-gray-700">
+                    <div className="flex flex-1 flex-col p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-800">{p.title}</p>
+                          <p className="mt-1 text-xs text-gray-400">{p.location}</p>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-xs leading-relaxed text-gray-500 line-clamp-2">
+                        {p.description}
+                      </p>
+                      <div className="mt-4 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Photos</span>
+                          <span className="text-xs font-medium text-gray-700">
                             {p.photoCount ?? 0} / {limits.maxPhotos}
                           </span>
                         </div>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${photoPct}%`,
-                              backgroundColor: photoPct >= 90 ? "#dc2626" : photoPct >= 70 ? COLORS.accentGold : COLORS.primary,
-                            }}
-                          />
+                        <div className="flex gap-1">
+                          {Array.from({ length: limits.maxPhotos }).map((_, idx) => (
+                            <div
+                              key={idx}
+                              className="h-8 flex-1 rounded-md border border-dashed border-gray-200 flex items-center justify-center text-[10px] transition-colors"
+                              style={{
+                                backgroundColor: idx < (p.photoCount ?? 0) ? COLORS.primary : "transparent",
+                                color: idx < (p.photoCount ?? 0) ? "#ffffff" : "#d1d5db",
+                                borderStyle: idx < (p.photoCount ?? 0) ? "solid" : "dashed",
+                              }}
+                            >
+                              {idx < (p.photoCount ?? 0) ? "📷" : ""}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">Videos</span>
-                          <span className="font-medium text-gray-700">
+                      <div className="mt-3 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Videos</span>
+                          <span className="text-xs font-medium text-gray-700">
                             {p.videoCount ?? 0} / {limits.maxVideos}
                           </span>
                         </div>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${videoPct}%`,
-                              backgroundColor: videoPct >= 90 ? "#dc2626" : videoPct >= 70 ? COLORS.accentGold : COLORS.primary,
-                            }}
-                          />
+                        <div className="flex gap-1">
+                          {Array.from({ length: limits.maxVideos }).map((_, idx) => (
+                            <div
+                              key={idx}
+                              className="h-8 flex-1 rounded-md border border-dashed border-gray-200 flex items-center justify-center text-[10px] transition-colors"
+                              style={{
+                                backgroundColor: idx < (p.videoCount ?? 0) ? COLORS.accentGold : "transparent",
+                                color: idx < (p.videoCount ?? 0) ? "#ffffff" : "#d1d5db",
+                                borderStyle: idx < (p.videoCount ?? 0) ? "solid" : "dashed",
+                              }}
+                            >
+                              {idx < (p.videoCount ?? 0) ? "▶" : ""}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs capitalize text-gray-600">
-                        {p.propertyType}
-                      </span>
-                      <span className="rounded-lg px-2.5 py-1 text-xs capitalize" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
-                        {p.brokerTier || "prop"} tier
-                      </span>
-                      <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
-                        {p.brokersUniqueCode}
-                      </span>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs capitalize text-gray-600">
+                          {p.propertyType}
+                        </span>
+                        <span className="rounded-lg px-2.5 py-1 text-xs capitalize" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
+                          {p.brokerTier || "prop"} tier
+                        </span>
+                        <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
+                          {p.brokersUniqueCode}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -185,7 +205,7 @@ export default function PropertiesPage() {
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-lg bg-white px-4 py-2 text-sm font-medium shadow-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+            className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
           >
             Previous
           </button>
@@ -193,7 +213,7 @@ export default function PropertiesPage() {
           <button
             disabled={(properties.data?.properties?.length ?? 0) < 20}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg bg-white px-4 py-2 text-sm font-medium shadow-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+            className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
           >
             Next
           </button>

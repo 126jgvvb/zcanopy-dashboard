@@ -19,6 +19,7 @@ export class ApiError extends Error {
   }
 }
 
+
 export interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
@@ -26,6 +27,7 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined>;
   fallback?: unknown;
 }
+
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
   const url = new URL(`${API_BASE}${path}`);
@@ -103,6 +105,9 @@ export const adminApi = {
 
   commissions: (token: string) =>
     apiFetch("/admin/commissions", { token, fallback: mockData.commission() }),
+
+  brokerCommissions: (token: string) =>
+    apiFetch("/admin/broker-commissions", { token, fallback: mockData.brokerCommissions() }),
 
   currentCommission: (token: string) =>
     apiFetch("/admin/commission/current", { token, fallback: mockData.currentCommission() }),
@@ -236,6 +241,41 @@ export const adminApi = {
 
   activeSessions: (token: string) =>
     apiFetch("/admin/customers/active-sessions", { token, fallback: mockData.activeSessions() }),
+
+  invoices: (token: string, page = 1, limit = 10, status?: string) =>
+    apiFetch("/admin/invoices", {
+      token,
+      query: { page, limit, status: status ?? "" },
+      fallback: mockData.invoices(status),
+    }),
+
+  deleteInvoice: (token: string, invoiceId: string) =>
+    apiFetch(`/admin/invoices/${invoiceId}`, { method: "DELETE", token, fallback: { success: true, message: "Invoice deleted (mock)" } }),
+
+  deleteInvoices: (token: string, invoiceIds: string[]) =>
+    apiFetch("/admin/invoices/batch-delete", { method: "DELETE", token, body: { invoiceIds }, fallback: { success: true, message: `Deleted ${invoiceIds.length} invoices (mock)` } }),
+
+  registerBroker: (payload: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    idFrontUrl?: string;
+    idBackUrl?: string;
+  }) =>
+    apiFetch<{ brokerId: string; email: string; phoneNumber: string; brokerCode: string }>(
+      "/broker/register",
+      { method: "POST", body: payload, fallback: { brokerId: "brk-mock-1", email: payload.email, phoneNumber: payload.phoneNumber, brokerCode: payload.email } },
+    ),
+
+  sendBrokerOtp: (email: string, phoneNumber: string) =>
+    apiFetch("/broker/otp/send", { method: "POST", body: { email, phoneNumber }, fallback: { success: true, message: "OTP sent (mock)", devCode: "123456" } }),
+
+  verifyBrokerOtp: (email: string, phoneNumber: string, emailCode: string, phoneCode: string) =>
+    apiFetch("/broker/otp/verify", {
+      method: "POST",
+      body: { email, phoneNumber, emailCode, phoneCode },
+      fallback: { success: true, message: "Verified (mock)" },
+    }),
 };
 
 export const authApi = {

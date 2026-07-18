@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/transactions", label: "Transactions", capability: "manage_finances", icon: "⇄" },
   { href: "/dashboard/commissions", label: "Commissions", capability: "manage_finances", icon: "%" },
   { href: "/dashboard/wallet", label: "Wallet", capability: "manage_finances", icon: "₵" },
+  { href: "/dashboard/invoices", label: "Invoices", capability: "manage_finances", icon: "▭" },
   { href: "/dashboard/messages", label: "Messages", capability: "manage_messages", icon: "✉" },
   { href: "/dashboard/admins", label: "Admins", capability: "manage_admins", icon: "★" },
   { href: "/dashboard/sessions", label: "Sessions", capability: "view_sessions", icon: "◷" },
@@ -62,10 +63,10 @@ export default function Sidebar({
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
+              className={`hover-gold flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
                 active
                   ? "bg-[var(--zcanopy-accent-gold)] font-semibold text-[var(--zcanopy-card-brown)] shadow-md"
-                  : "text-white/80 hover:bg-[#D1A054]/20 hover:text-white"
+                  : "text-white/80"
               }`}
             >
               <span className="text-base">{item.icon}</span>
@@ -88,7 +89,7 @@ export default function Sidebar({
             logout();
             router.replace("/login");
           }}
-          className="w-full rounded-xl px-3 py-2.5 text-left text-sm text-white/80 transition-colors hover:bg-white/10"
+          className="hover-gold w-full rounded-xl px-3 py-2.5 text-left text-sm text-white/80"
         >
           Sign out
         </button>

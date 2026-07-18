@@ -36,7 +36,7 @@ export default function SessionsPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {(sessions.data?.sessions ?? []).map((s: any) => (
-                  <tr key={s.sessionId} className="hover:bg-gray-50">
+                  <tr key={s.sessionId} className="hover:bg-[#D1A054]/5 transition-colors">
                     <td className="py-2.5 pr-4 font-mono text-xs">{s.sessionId}</td>
                     <td className="py-2.5 pr-4">{s.deviceId}</td>
                     <td className="py-2.5 pr-4 text-gray-500">

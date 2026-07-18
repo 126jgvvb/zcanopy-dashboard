@@ -78,15 +78,15 @@ export default function LogsPage() {
         <button
           disabled={page <= 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="rounded-lg bg-white px-3 py-1.5 text-sm disabled:opacity-50"
+          className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
         >
           Previous
         </button>
-        <span className="px-2 py-1.5 text-sm text-gray-500">Page {page}</span>
+        <span className="px-3 py-2 text-sm text-gray-500">Page {page}</span>
         <button
           disabled={(logs.data?.logs?.length ?? 0) < 25}
           onClick={() => setPage((p) => p + 1)}
-          className="rounded-lg bg-white px-3 py-1.5 text-sm disabled:opacity-50"
+          className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
         >
           Next
         </button>

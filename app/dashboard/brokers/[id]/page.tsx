@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
+import { useAuth } from "@/components/AuthProvider";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
 
@@ -27,6 +28,7 @@ export default function BrokerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const { admin } = useAuth();
   const details = useAdminData(
     (token) => adminApi.brokerDetails(token, id),
     [id],
@@ -137,6 +139,39 @@ export default function BrokerDetailPage({
             </div>
           </Panel>
 
+          <Panel title="Identity Verification">
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                Names awaiting approval
+              </p>
+              <p className="mt-1 text-sm font-medium text-amber-900">
+                {broker.legalName || broker.username}
+              </p>
+              {broker.idNumber ? (
+                <p className="text-xs text-amber-700">ID No: {broker.idNumber}</p>
+              ) : null}
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <IdImage label="National ID — Front" src={broker.idFrontUrl} />
+              <IdImage label="National ID — Back" src={broker.idBackUrl} />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => adminApi.approveDocument(admin!.token, id, { namesMatched: true })}
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-90"
+                style={{ backgroundColor: COLORS.primary }}
+              >
+                Approve & Match Names
+              </button>
+              <button
+                onClick={() => adminApi.approveDocument(admin!.token, id, { namesMatched: false })}
+                className="rounded-xl bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-200"
+              >
+                Reject
+              </button>
+            </div>
+          </Panel>
+
           <Panel title="Recent Transactions">
             {transactions.loading ? (
               <LoadingState />
@@ -175,32 +210,77 @@ export default function BrokerDetailPage({
             ) : props.length === 0 ? (
               <p className="py-6 text-center text-sm text-gray-400">No properties.</p>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {props.map((p: any) => (
                   <div
                     key={p.id}
-                    className="rounded-xl border border-gray-100 p-4 transition-all hover:border-[var(--zcanopy-accent-gold)] hover:shadow-md"
+                    className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md hover:border-[var(--zcanopy-accent-gold)]"
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium">{p.title}</p>
-                        <p className="text-xs text-gray-400">{p.location}</p>
+                    <div className="relative h-52 w-full overflow-hidden rounded-t-2xl bg-gray-100">
+                      <div className="flex h-full w-full items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-4xl">🏠</div>
+                          <p className="mt-1 text-xs text-gray-400">Property Image</p>
+                        </div>
                       </div>
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${p.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                        {p.isAvailable ? "Available" : "Unavailable"}
-                      </span>
+                      <div className="absolute right-2 top-2">
+                        <span className={`rounded-full px-2 py-0.5 text-xs ${p.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                          {p.isAvailable ? "Available" : "Unavailable"}
+                        </span>
+                      </div>
                     </div>
-                    <p className="mt-2 text-xs text-gray-500">{p.description}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                        {p.photoCount ?? 0} / {p.maxPhotos ?? limits.maxPhotos} photos
-                      </span>
-                      <span className="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                        {p.videoCount ?? 0} / {p.maxVideos ?? limits.maxVideos} videos
-                      </span>
-                      <span className="rounded-lg px-2 py-1 text-xs capitalize" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
-                        {p.propertyType}
-                      </span>
+                    <div className="flex flex-1 flex-col p-4">
+                      <p className="font-medium">{p.title}</p>
+                      <p className="text-xs text-gray-400">{p.location}</p>
+                      <p className="mt-2 text-xs text-gray-500 line-clamp-2">{p.description}</p>
+                      <div className="mt-3 space-y-2">
+                        <div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500">Photos</span>
+                            <span className="font-medium text-gray-700">
+                              {p.photoCount ?? 0} / {p.maxPhotos ?? limits.maxPhotos}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {Array.from({ length: p.maxPhotos ?? limits.maxPhotos }).map((_, idx) => (
+                              <div
+                                key={idx}
+                                className="h-10 w-10 rounded border border-dashed border-gray-200 flex items-center justify-center text-xs"
+                                style={{
+                                  backgroundColor: idx < (p.photoCount ?? 0) ? COLORS.primary : "transparent",
+                                  color: idx < (p.photoCount ?? 0) ? "#ffffff" : "#d1d5db",
+                                  borderStyle: idx < (p.photoCount ?? 0) ? "solid" : "dashed",
+                                }}
+                              >
+                                {idx < (p.photoCount ?? 0) ? "📷" : ""}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500">Videos</span>
+                            <span className="font-medium text-gray-700">
+                              {p.videoCount ?? 0} / {p.maxVideos ?? limits.maxVideos}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex gap-1.5">
+                            {Array.from({ length: p.maxVideos ?? limits.maxVideos }).map((_, idx) => (
+                              <div
+                                key={idx}
+                                className="h-16 flex-1 rounded border border-dashed border-gray-200 flex items-center justify-center text-base"
+                                style={{
+                                  backgroundColor: idx < (p.videoCount ?? 0) ? COLORS.accentGold : "transparent",
+                                  color: idx < (p.videoCount ?? 0) ? "#ffffff" : "#d1d5db",
+                                  borderStyle: idx < (p.videoCount ?? 0) ? "solid" : "dashed",
+                                }}
+                              >
+                                {idx < (p.videoCount ?? 0) ? "▶" : ""}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -293,6 +373,70 @@ function LimitRow({ label, used, max }: { label: string; used: number; max: numb
             backgroundColor: pct >= 90 ? "#dc2626" : pct >= 70 ? COLORS.accentGold : COLORS.primary,
           }}
         />
+      </div>
+    </div>
+  );
+}
+
+function IdImage({ label, src }: { label: string; src?: string }) {
+  const [zoom, setZoom] = useState(1);
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-xs font-medium text-gray-500">{label}</p>
+        {src ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(1, +(z - 0.25).toFixed(2)))}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100"
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+            <span className="w-10 text-center text-xs font-medium text-gray-500">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)))}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+          </div>
+        ) : null}
+      </div>
+      <div className="flex h-64 w-full items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
+        {src ? (
+          <div
+            className="h-full w-full overflow-auto"
+            style={{ cursor: zoom > 1 ? "zoom-in" : "default" }}
+          >
+            <div
+              className="flex h-full w-full items-center justify-center"
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: "center",
+                transition: "transform 0.15s ease-out",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={label}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-gray-400">
+            <div className="text-3xl">🪪</div>
+            <p className="mt-1 text-xs">No image uploaded</p>
+          </div>
+        )}
       </div>
     </div>
   );
