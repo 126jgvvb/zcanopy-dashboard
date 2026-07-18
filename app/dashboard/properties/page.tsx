@@ -188,6 +188,19 @@ export default function PropertiesPage() {
                             </div>
                           ))}
                         </div>
+                        {(p.videoCount ?? 0) > 0 ? (
+                          <video
+                            src={p.videoUrl && p.videoUrl[0] ? p.videoUrl[0] : "/sample_vid.mp4"}
+                            className="mt-2 w-full rounded-md bg-black"
+                            controls
+                            muted
+                            loop
+                            playsInline
+                            preload="metadata"
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                        ) : null}
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2">
                         <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs capitalize text-gray-600">
