@@ -27,7 +27,7 @@ function BrokerWelcomePageInner() {
             {code || "BRK-XXXX"}
           </p>
           <p className="mt-2 text-xs text-gray-500">
-            Use this code to complete your sign-up in the ZCanopy mobile app. Do not share it with customers.
+            We&apos;ve also sent this code to <span className="font-semibold">{email || "your email"}</span>. Use this code to complete your sign-up in the ZCanopy mobile app. Do not share it with customers.
           </p>
         </div>
 
