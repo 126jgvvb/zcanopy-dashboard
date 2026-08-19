@@ -93,6 +93,7 @@ export default function BrokerDetailPage({
             <div className="mt-5 space-y-2.5 text-sm">
               <InfoRow label="Email" value={broker.email} />
               <InfoRow label="Phone" value={broker.phoneNumber} />
+              <InfoRow label="Brand Name" value={broker.brokerBrandName || "—"} />
               <InfoRow label="Code" value={broker.brokerCode} mono />
               <InfoRow label="Location" value={broker.location} />
               <InfoRow label="Wallet" value={currency(wallet)} highlight />

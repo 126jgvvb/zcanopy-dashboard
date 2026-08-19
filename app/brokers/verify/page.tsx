@@ -65,12 +65,37 @@ function BrokerVerifyPageInner() {
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [resendCountdown]);
 
   async function sendOtp() {
     try {
       const res = await adminApi.sendBrokerOtp(email, phone);
       if ((res as any).devCode) {
         setInfo(`Dev code: ${(res as any).devCode} (use for both email & phone)`);
+      }
+      if ((res as any).success) {
+        setResendCountdown(60);
+      }
+      if ((res as any).waitSeconds) {
+        setResendCountdown((res as any).waitSeconds);
       }
     } catch {
       setError("Failed to send verification codes. Please retry.");
@@ -156,10 +181,14 @@ function BrokerVerifyPageInner() {
 
         <button
           onClick={handleResend}
-          disabled={resending}
+          disabled={resending || resendCountdown > 0}
           className="text-center text-sm font-medium text-gray-500 hover:text-[var(--zcanopy-primary)] disabled:opacity-60"
         >
-          {resending ? "Resending…" : "Didn't get a code? Resend"}
+          {resending
+            ? "Resending…"
+            : resendCountdown > 0
+              ? `Resend available in ${resendCountdown}s`
+              : "Didn't get a code? Resend"}
         </button>
       </div>
     </OnboardingShell>

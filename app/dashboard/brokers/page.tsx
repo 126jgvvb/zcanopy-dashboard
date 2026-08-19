@@ -181,6 +181,7 @@ function BrokerTable({
           <tr>
             <th className="py-3 pr-4">Broker</th>
             <th className="py-2 pr-4">Email</th>
+            <th className="py-2 pr-4">Brand Name</th>
             <th className="py-2 pr-4">Code</th>
             <th className="py-2 pr-4">Tier</th>
             <th className="py-2 pr-4">Status</th>
@@ -202,6 +203,7 @@ function BrokerTable({
                 </div>
               </td>
               <td className="py-3 pr-4 text-gray-500">{b.email}</td>
+              <td className="py-3 pr-4 text-gray-500">{b.brokerBrandName || '—'}</td>
               <td className="py-2 pr-4">
                 <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-mono text-gray-600">
                   {b.brokerCode}
