@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { Home, CheckCircle, MapPin } from "lucide-react";
 import { COLORS } from "@/lib/theme";
 
 const VALUES = [
-  { icon: "🏠", title: "Trusted Listings", text: "Every property is tied to a verified broker, reducing fraud and building trust." },
-  { icon: "✅", title: "Verified Brokers", text: "Brokers pass identity verification before they can list on the Platform." },
-  { icon: "📍", title: "Local Expertise", text: "Built in Uganda, for Uganda's property market." },
+  { icon: Home, title: "Trusted Listings", text: "Every property is tied to a verified broker, reducing fraud and building trust." },
+  { icon: CheckCircle, title: "Verified Brokers", text: "Brokers pass identity verification before they can list on the Platform." },
+  { icon: MapPin, title: "Local Expertise", text: "Built in Uganda, for Uganda's property market." },
 ];
 
 export default function AboutPage() {
@@ -45,7 +46,7 @@ export default function AboutPage() {
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {VALUES.map((v) => (
             <div key={v.title} className="rounded-2xl border border-gray-200/60 bg-[var(--zcanopy-surface)] p-5">
-              <div className="text-2xl">{v.icon}</div>
+              <v.icon className="h-6 w-6 text-gray-500" />
               <h3 className="mt-3 font-semibold" style={{ color: COLORS.cardBrown }}>{v.title}</h3>
               <p className="mt-1 text-sm text-gray-500">{v.text}</p>
             </div>

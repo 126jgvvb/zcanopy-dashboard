@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MapPin, Phone, Mail } from "lucide-react";
 import { COLORS } from "@/lib/theme";
 
 /**
@@ -91,17 +92,17 @@ export default function Footer() {
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-gray-500">
               <li className="flex items-start gap-2">
-                <span aria-hidden>📍</span>
+                <MapPin className="h-4 w-4 mt-0.5 text-gray-400" />
                 <span>{CONTACT.location}</span>
               </li>
               <li className="flex items-start gap-2">
-                <span aria-hidden>📞</span>
+                <Phone className="h-4 w-4 mt-0.5 text-gray-400" />
                 <a href={`tel:${CONTACT.phone}`} className="transition-colors hover:text-[var(--zcanopy-primary)]">
                   {CONTACT.phone}
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <span aria-hidden>✉️</span>
+                <Mail className="h-4 w-4 mt-0.5 text-gray-400" />
                 <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-[var(--zcanopy-primary)]">
                   {CONTACT.email}
                 </a>

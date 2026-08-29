@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { COLORS } from "@/lib/theme";
 
 const CONTACT = {
@@ -62,17 +63,17 @@ export default function HelpPage() {
         {/* Contact cards */}
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <a href={`tel:${CONTACT.phone}`} className="rounded-2xl border border-gray-200/60 bg-[var(--zcanopy-surface)] p-5 transition-shadow hover:shadow-md">
-            <div className="text-2xl">📞</div>
+            <Phone className="h-6 w-6 text-gray-500" />
             <h3 className="mt-3 text-sm font-semibold" style={{ color: COLORS.cardBrown }}>Call us</h3>
             <p className="mt-1 text-sm text-gray-500">{CONTACT.phone}</p>
           </a>
           <a href={`mailto:${CONTACT.email}`} className="rounded-2xl border border-gray-200/60 bg-[var(--zcanopy-surface)] p-5 transition-shadow hover:shadow-md">
-            <div className="text-2xl">✉️</div>
+            <Mail className="h-6 w-6 text-gray-500" />
             <h3 className="mt-3 text-sm font-semibold" style={{ color: COLORS.cardBrown }}>Email us</h3>
             <p className="mt-1 text-sm text-gray-500">{CONTACT.email}</p>
           </a>
           <div className="rounded-2xl border border-gray-200/60 bg-[var(--zcanopy-surface)] p-5">
-            <div className="text-2xl">📍</div>
+            <MapPin className="h-6 w-6 text-gray-500" />
             <h3 className="mt-3 text-sm font-semibold" style={{ color: COLORS.cardBrown }}>Visit us</h3>
             <p className="mt-1 text-sm text-gray-500">{CONTACT.location}</p>
           </div>

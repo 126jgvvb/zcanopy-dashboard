@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,6 +5,7 @@ import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
 import { GoogleMap, type PropertyLocation } from "@/components/GoogleMap";
+import { Home, Camera, Video } from "lucide-react";
 
 const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; maxVideos: number; maxVideoSizeMB: number }> = {
   fibrous: { maxProperties: 12, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
@@ -122,7 +122,7 @@ export default function PropertiesPage() {
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
                           <div className="text-center">
-                            <div className="text-4xl">🏠</div>
+                            <Home className="mx-auto h-8 w-8 text-gray-400" />
                             <p className="mt-2 text-xs text-gray-400">Property Image</p>
                           </div>
                         </div>
@@ -161,7 +161,7 @@ export default function PropertiesPage() {
                                 borderStyle: idx < (p.photoCount ?? 0) ? "solid" : "dashed",
                               }}
                             >
-                              {idx < (p.photoCount ?? 0) ? "📷" : ""}
+                              {idx < (p.photoCount ?? 0) ? <Camera className="h-3 w-3" /> : ""}
                             </div>
                           ))}
                         </div>
@@ -184,7 +184,7 @@ export default function PropertiesPage() {
                                 borderStyle: idx < (p.videoCount ?? 0) ? "solid" : "dashed",
                               }}
                             >
-                              {idx < (p.videoCount ?? 0) ? "▶" : ""}
+                              {idx < (p.videoCount ?? 0) ? <Video className="h-3 w-3" /> : ""}
                             </div>
                           ))}
                         </div>

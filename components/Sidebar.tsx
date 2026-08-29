@@ -3,27 +3,41 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import {
+  LayoutGrid,
+  Briefcase,
+  Home,
+  ArrowLeftRight,
+  Percent,
+  Wallet,
+  FileText,
+  Mail,
+  UserCog,
+  Gauge,
+  PanelBottomOpen,
+  Search,
+} from "lucide-react";
 import { COLORS, can, type AdminCapability } from "@/lib/theme";
 
 interface NavItem {
   href: string;
   label: string;
   capability?: AdminCapability;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Overview", capability: "view_dashboard", icon: "▦" },
-  { href: "/dashboard/brokers", label: "Brokers", capability: "manage_brokers", icon: "◉" },
-  { href: "/dashboard/properties", label: "Properties", capability: "manage_brokers", icon: "⌂" },
-  { href: "/dashboard/transactions", label: "Transactions", capability: "manage_finances", icon: "⇄" },
-  { href: "/dashboard/commissions", label: "Commissions", capability: "manage_finances", icon: "%" },
-  { href: "/dashboard/wallet", label: "Wallet", capability: "manage_finances", icon: "₵" },
-  { href: "/dashboard/invoices", label: "Invoices", capability: "manage_finances", icon: "▭" },
-  { href: "/dashboard/messages", label: "Messages", capability: "manage_messages", icon: "✉" },
-  { href: "/dashboard/admins", label: "Admins", capability: "manage_admins", icon: "★" },
-  { href: "/dashboard/sessions", label: "Sessions", capability: "view_sessions", icon: "◷" },
-  { href: "/dashboard/logs", label: "System Logs", capability: "view_logs", icon: "≣" },
+  { href: "/dashboard", label: "Overview", capability: "view_dashboard", icon: <LayoutGrid className="h-4 w-4" /> },
+  { href: "/dashboard/brokers", label: "Brokers", capability: "manage_brokers", icon: <Briefcase className="h-4 w-4" /> },
+  { href: "/dashboard/properties", label: "Properties", capability: "manage_brokers", icon: <Home className="h-4 w-4" /> },
+  { href: "/dashboard/transactions", label: "Transactions", capability: "manage_finances", icon: <ArrowLeftRight className="h-4 w-4" /> },
+  { href: "/dashboard/commissions", label: "Commissions", capability: "manage_finances", icon: <Percent className="h-4 w-4" /> },
+  { href: "/dashboard/wallet", label: "Wallet", capability: "manage_finances", icon: <Wallet className="h-4 w-4" /> },
+  { href: "/dashboard/invoices", label: "Invoices", capability: "manage_finances", icon: <FileText className="h-4 w-4" /> },
+  { href: "/dashboard/messages", label: "Messages", capability: "manage_messages", icon: <Mail className="h-4 w-4" /> },
+  { href: "/dashboard/admins", label: "Admins", capability: "manage_admins", icon: <UserCog className="h-4 w-4" /> },
+  { href: "/dashboard/sessions", label: "Sessions", capability: "view_sessions", icon: <Gauge className="h-4 w-4" /> },
+  { href: "/dashboard/logs", label: "System Logs", capability: "view_logs", icon: <PanelBottomOpen className="h-4 w-4" /> },
 ];
 
 export default function Sidebar({
@@ -69,7 +83,7 @@ export default function Sidebar({
                   : "text-white/80"
               }`}
             >
-              <span className="text-base">{item.icon}</span>
+              {item.icon}
               {item.label}
               {item.capability === "manage_messages" && (
                 <span className="ml-auto flex h-2 w-2 rounded-full bg-green-400" />

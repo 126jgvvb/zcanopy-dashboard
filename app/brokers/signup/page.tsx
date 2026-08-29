@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { OnboardingShell, PrimaryButton, Field, TextInput } from "@/components/Onboarding";
 import { adminApi, ApiError } from "@/lib/api";
+import { IdCard } from "lucide-react";
 
 function IdUpload({
   label,
@@ -29,7 +30,7 @@ function IdUpload({
           <img src={preview} alt={label} className="h-full w-full object-contain" />
         ) : (
           <div className="text-gray-400">
-            <div className="text-3xl">🪪</div>
+            <IdCard className="mx-auto h-8 w-8" />
             <p className="mt-1 text-xs">Tap to upload</p>
           </div>
         )}

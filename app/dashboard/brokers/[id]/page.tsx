@@ -7,6 +7,7 @@ import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { useAuth } from "@/components/AuthProvider";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
+import { ArrowLeft, Home, Camera, Video, IdCard, ZoomIn, ZoomOut } from "lucide-react";
 
 const currency = (n: number) =>
   `UGX ${Number(n || 0).toLocaleString("en-UG")}`;
@@ -60,9 +61,7 @@ export default function BrokerDetailPage({
         className="inline-flex items-center gap-1 text-sm font-medium hover:underline"
         style={{ color: COLORS.primary }}
       >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <ArrowLeft className="h-4 w-4" />
         Back to brokers
       </Link>
 
@@ -228,7 +227,7 @@ export default function BrokerDetailPage({
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
                           <div className="text-center">
-                            <div className="text-4xl">🏠</div>
+                            <Home className="mx-auto h-8 w-8 text-gray-400" />
                             <p className="mt-1 text-xs text-gray-400">Property Image</p>
                           </div>
                         </div>
@@ -262,7 +261,7 @@ export default function BrokerDetailPage({
                                   borderStyle: idx < (p.photoCount ?? 0) ? "solid" : "dashed",
                                 }}
                               >
-                                {idx < (p.photoCount ?? 0) ? "📷" : ""}
+                                {idx < (p.photoCount ?? 0) ? <Camera className="h-3 w-3" /> : ""}
                               </div>
                             ))}
                           </div>
@@ -285,7 +284,7 @@ export default function BrokerDetailPage({
                                   borderStyle: idx < (p.videoCount ?? 0) ? "solid" : "dashed",
                                 }}
                               >
-                                {idx < (p.videoCount ?? 0) ? "▶" : ""}
+                                {idx < (p.videoCount ?? 0) ? <Video className="h-3 w-3" /> : ""}
                               </div>
                             ))}
                           </div>
@@ -400,10 +399,10 @@ function IdImage({ label, src }: { label: string; src?: string }) {
             <button
               type="button"
               onClick={() => setZoom((z) => Math.max(1, +(z - 0.25).toFixed(2)))}
-              className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100"
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100"
               aria-label="Zoom out"
             >
-              −
+              <ZoomOut className="h-3 w-3" />
             </button>
             <span className="w-10 text-center text-xs font-medium text-gray-500">
               {Math.round(zoom * 100)}%
@@ -411,10 +410,10 @@ function IdImage({ label, src }: { label: string; src?: string }) {
             <button
               type="button"
               onClick={() => setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)))}
-              className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100"
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100"
               aria-label="Zoom in"
             >
-              +
+              <ZoomIn className="h-3 w-3" />
             </button>
           </div>
         ) : null}
@@ -443,7 +442,7 @@ function IdImage({ label, src }: { label: string; src?: string }) {
           </div>
         ) : (
           <div className="text-center text-gray-400">
-            <div className="text-3xl">🪪</div>
+            <IdCard className="mx-auto h-8 w-8" />
             <p className="mt-1 text-xs">No image uploaded</p>
           </div>
         )}

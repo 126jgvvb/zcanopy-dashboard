@@ -8,6 +8,7 @@ import { COLORS } from "@/lib/theme";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Home, Handshake, BarChart3, Shield, MessageSquare, Zap, MapPin } from "lucide-react";
 
 function formatUGX(n: number) {
   try {
@@ -19,32 +20,32 @@ function formatUGX(n: number) {
 
 const FEATURES = [
   {
-    icon: "🏠",
+    icon: Home,
     title: "List with ease",
     text: "Brokers upload properties with photos and video, set availability, and reach buyers across Uganda.",
   },
   {
-    icon: "🤝",
+    icon: Handshake,
     title: "Smart connections",
     text: "Every broker gets a unique broker code clients use in the mobile app to discover their listings.",
   },
   {
-    icon: "📊",
+    icon: BarChart3,
     title: "Transparent earnings",
     text: "Track commissions, bookings, and payouts in real time with clear, auditable reporting.",
   },
   {
-    icon: "🛡️",
+    icon: Shield,
     title: "Verified & trusted",
     text: "Document verification and OTP confirmation keep the marketplace safe for everyone.",
   },
   {
-    icon: "💬",
+    icon: MessageSquare,
     title: "Unified messaging",
     text: "Coordinate with clients and brokers from one console — email and SMS, fully logged.",
   },
   {
-    icon: "⚡",
+    icon: Zap,
     title: "Instant invoicing",
     text: "The notification service auto-generates and delivers invoices for subscriptions and listings.",
   },
@@ -254,10 +255,10 @@ export default function LandingPage() {
               style={{ border: "1px solid rgba(0,0,0,0.05)" }}
             >
               <div
-                className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl"
                 style={{ backgroundColor: `${COLORS.accentGold}22` }}
               >
-                {f.icon}
+                <f.icon className="h-6 w-6" style={{ color: COLORS.primary }} />
               </div>
               <h3 className="mt-4 text-lg font-semibold" style={{ color: COLORS.cardBrown }}>{f.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-600">{f.text}</p>
@@ -392,7 +393,10 @@ function PropertyShowcase() {
                 <h3 className="text-lg font-semibold" style={{ color: COLORS.cardBrown }}>
                   {active.title}
                 </h3>
-                <p className="mt-0.5 text-xs text-gray-400">📍 {active.location}</p>
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-gray-400" />
+                  <p className="mt-0.5 text-xs text-gray-400">{active.location}</p>
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-[10px] uppercase tracking-wide text-gray-400">{active.priceLabel}</p>

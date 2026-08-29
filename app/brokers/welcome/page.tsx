@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { OnboardingShell, PrimaryButton } from "@/components/Onboarding";
 import { COLORS } from "@/lib/theme";
+import { Clock } from "lucide-react";
 
 function BrokerWelcomePageInner() {
   const params = useSearchParams();
@@ -19,8 +20,8 @@ function BrokerWelcomePageInner() {
     >
       <div className="flex flex-col gap-5">
         <div className="rounded-2xl border border-[var(--zcanopy-accent-gold)] bg-[#D1A054]/10 p-5 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-2xl">
-            ⏳
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+            <Clock className="h-6 w-6" />
           </div>
           <p className="text-sm font-medium text-gray-600">Your broker code is</p>
           <p className="mt-1 break-all rounded-xl bg-white px-4 py-3 font-mono text-lg font-bold" style={{ color: COLORS.primary }}>

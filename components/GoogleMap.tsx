@@ -122,7 +122,7 @@ export function GoogleMap({ locations }: { locations: PropertyLocation[] }) {
         map,
         title: p.title,
         label: {
-          text: "📍",
+          text: "•",
           fontSize: "16px",
         },
       });
