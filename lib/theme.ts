@@ -3,10 +3,10 @@ export const COLORS = {
   primaryAlt: "#A9610E",
   cardBrown: "#5D4037",
   accentGold: "#D1A054",
-  background: "#F5F5F5",
-  surface: "#FFFFFF",
-  surfaceDark: "#1E1E1E",
-  scaffoldDark: "#121212",
+  background: "#F6F2EB",
+  surface: "#FFFCF8",
+  surfaceDark: "#1C1814",
+  scaffoldDark: "#14110E",
 } as const;
 
 export type AdminRole = "super_admin" | "admin" | "support";

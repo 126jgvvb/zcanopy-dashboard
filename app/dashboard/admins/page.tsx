@@ -33,13 +33,13 @@ export default function AdminsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-[var(--zcanopy-card-brown)]">
+        <h2 className="text-lg font-semibold tracking-tight text-[var(--zcanopy-card-brown)]">
           Administrators ({admins.data?.admins?.length ?? 0})
         </h2>
         {canManage ? (
           <button
             onClick={() => setShowInvite((s) => !s)}
-            className="rounded-xl bg-[var(--zcanopy-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="rounded-xl bg-[var(--zcanopy-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 hover:shadow-md"
           >
             {showInvite ? "Close" : "Generate Invite"}
           </button>
@@ -65,18 +65,18 @@ export default function AdminsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase text-gray-400">
+              <thead className="text-[11px] uppercase tracking-[0.12em] text-[var(--zcanopy-muted)]">
                 <tr>
-                  <th className="py-2 pr-4">Username</th>
-                  <th className="py-2 pr-4">Email</th>
-                  <th className="py-2 pr-4">Role</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2">Actions</th>
+                  <th className="py-3 pr-4">Username</th>
+                  <th className="py-3 pr-4">Email</th>
+                  <th className="py-3 pr-4">Role</th>
+                  <th className="py-3 pr-4">Status</th>
+                  <th className="py-3">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[var(--zcanopy-border)]">
                 {(admins.data?.admins ?? []).map((a: any) => (
-                   <tr key={a.id} className="hover:bg-[#D1A054]/5 transition-colors">
+                   <tr key={a.id} className="transition-colors hover:bg-[rgba(209,160,84,0.08)]">
                     <td className="py-2.5 pr-4 font-medium">{a.username}</td>
                     <td className="py-2.5 pr-4 text-gray-500">{a.email}</td>
                     <td className="py-2.5 pr-4">

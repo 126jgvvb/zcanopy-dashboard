@@ -1,15 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f5f5;
-  --foreground: #171717;
+  --background: #f6f2eb;
+  --foreground: #2a221c;
+  --zcanopy-background: var(--background);
 
   /* ZCanopy brand palette (mirrors the Flutter app) */
   --zcanopy-primary: #a9710e;
   --zcanopy-primary-alt: #a9610e;
   --zcanopy-card-brown: #5d4037;
   --zcanopy-accent-gold: #d1a054;
-  --zcanopy-surface: #ffffff;
+  --zcanopy-surface: #fffcf8;
+
+  --zcanopy-muted: #7a6f65;
+  --zcanopy-border: rgba(93, 64, 55, 0.1);
+  --zcanopy-ring: rgba(169, 113, 14, 0.28);
+  --zcanopy-overlay: rgba(42, 34, 28, 0.045);
+
+  --zcanopy-shadow-sm:
+    0 1px 2px rgba(45, 32, 20, 0.04),
+    0 8px 24px rgba(45, 32, 20, 0.04);
+  --zcanopy-shadow-md:
+    0 2px 4px rgba(45, 32, 20, 0.05),
+    0 16px 40px rgba(45, 32, 20, 0.07);
+  --zcanopy-radius: 1rem;
 }
 
 @theme inline {
@@ -20,21 +34,41 @@
   --color-zcanopy-card-brown: var(--zcanopy-card-brown);
   --color-zcanopy-accent-gold: var(--zcanopy-accent-gold);
   --color-zcanopy-surface: var(--zcanopy-surface);
+  --color-zcanopy-muted: var(--zcanopy-muted);
+  --color-zcanopy-border: var(--zcanopy-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --animate-letter-drop: letterDrop 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --shadow-zcanopy-sm: var(--zcanopy-shadow-sm);
+  --shadow-zcanopy-md: var(--zcanopy-shadow-md);
 }
 
 /* Manual dark theme, toggled via the `dark` class on <html>. */
 html.dark {
-  --background: #0f0f0f;
-  --foreground: #e5e5e5;
-  --zcanopy-surface: #1a1a1a;
+  --background: #14110e;
+  --foreground: #f8edd8;
+  --zcanopy-card-brown: #fde68a;
+  --zcanopy-surface: #1c1814;
+  --zcanopy-muted: #b8aa96;
+  --zcanopy-border: rgba(253, 230, 138, 0.12);
+  --zcanopy-ring: rgba(209, 160, 84, 0.38);
+  --zcanopy-overlay: rgba(255, 236, 200, 0.04);
+  --zcanopy-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.28);
+  --zcanopy-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 20px 48px rgba(0, 0, 0, 0.32);
 }
 
-/* Smooth transition when toggling themes. */
+html.dark aside {
+  --zcanopy-card-brown: #5d4037;
+  color: #ffffff;
+}
+
 html {
-  transition: background-color 0.25s ease, color 0.25s ease;
+  color-scheme: light;
+  transition: background-color 0.28s ease, color 0.28s ease;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 * {
@@ -48,28 +82,102 @@ body {
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 520px at 12% -8%, rgba(209, 160, 84, 0.14), transparent 55%),
+    radial-gradient(900px 480px at 100% 0%, rgba(169, 113, 14, 0.08), transparent 50%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-feature-settings: "ss01" on, "cv11" on;
+  letter-spacing: -0.011em;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+html.dark body {
+  background:
+    radial-gradient(1000px 500px at 8% -12%, rgba(209, 160, 84, 0.12), transparent 50%),
+    radial-gradient(800px 420px at 100% 0%, rgba(169, 113, 14, 0.08), transparent 48%),
+    var(--background);
+}
+
+::selection {
+  background: rgba(209, 160, 84, 0.38);
+  color: var(--foreground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--zcanopy-primary);
+  outline-offset: 2px;
+}
+
+a {
+  text-underline-offset: 3px;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+/* Form controls inherit a consistent, quieter focus treatment. */
 input,
 textarea,
 select {
   color: var(--foreground);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--zcanopy-primary) !important;
+  box-shadow: 0 0 0 3px var(--zcanopy-ring);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]),
+textarea,
+select {
+  background-color: var(--zcanopy-surface);
 }
 
 html.dark input,
 html.dark textarea,
 html.dark select {
-  background-color: #262626;
-  border-color: #404040;
-  color: #e5e5e5;
+  background-color: #26211c;
+  border-color: #3d342c;
+  color: #f8edd8;
 }
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #a3a3a3;
+  color: #8f8476;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+thead th {
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+tbody tr {
+  transition: background-color 0.16s ease;
 }
 
 .line-clamp-2 {
@@ -80,12 +188,18 @@ html.dark textarea::placeholder {
 }
 
 .hover-gold {
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.hover-gold:hover {
-  background-color: #D1A054 !important;
-  color: #ffffff !important;
+.hover-gold:hover:not(:disabled) {
+  background-color: var(--zcanopy-accent-gold) !important;
+  color: #4a2f1c !important;
+  box-shadow: 0 6px 18px rgba(209, 160, 84, 0.32);
 }
 
 @keyframes fadeIn {
@@ -116,4 +230,41 @@ html.dark textarea::placeholder {
 
 .letter-drop {
   animation: var(--animate-letter-drop);
+}
+
+/* Thin, brand-tinted scrollbars where supported. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 113, 14, 0.45) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(169, 113, 14, 0.38);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(169, 113, 14, 0.58);
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

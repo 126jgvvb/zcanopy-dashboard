@@ -236,7 +236,7 @@ export default function OverviewPage() {
             {(messages.data?.messages ?? []).map((m: any, i: number) => (
               <li
                 key={i}
-                className="flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-colors hover:border-[var(--zcanopy-accent-gold)] hover:shadow-md"
+                className="flex items-start gap-3 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-4 shadow-[var(--zcanopy-shadow-sm)] transition-all hover:border-[var(--zcanopy-accent-gold)] hover:shadow-[var(--zcanopy-shadow-md)]"
               >
                 <span
                   className="mt-1.5 h-2 w-2 shrink-0 rounded-full"

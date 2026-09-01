@@ -62,7 +62,7 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       {/* Nav */}
-      <header className="sticky top-0 z-20 border-b border-gray-200/60 bg-[var(--zcanopy-surface)]/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-20 border-b border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)]/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
             <span
@@ -75,10 +75,10 @@ export default function LandingPage() {
               ZCanopy
             </span>
           </div>
-          <nav className="hidden items-center gap-7 text-sm font-medium text-gray-600 md:flex">
-            <a href="#features" className="hover:text-[var(--zcanopy-primary)]">Features</a>
-            <a href="#how" className="hover:text-[var(--zcanopy-primary)]">How it works</a>
-            <a href="#stats" className="hover:text-[var(--zcanopy-primary)]">Impact</a>
+          <nav className="hidden items-center gap-7 text-sm font-medium text-[var(--zcanopy-muted)] md:flex">
+            <a href="#features" className="transition-colors hover:text-[var(--zcanopy-primary)]">Features</a>
+            <a href="#how" className="transition-colors hover:text-[var(--zcanopy-primary)]">How it works</a>
+            <a href="#stats" className="transition-colors hover:text-[var(--zcanopy-primary)]">Impact</a>
             <ThemeToggle />
           </nav>
           <div className="md:hidden">
@@ -104,24 +104,24 @@ export default function LandingPage() {
             >
               Real estate, reimagined
             </span>
-            <h1 className="mt-5 text-4xl font-bold leading-tight sm:text-5xl" style={{ color: COLORS.cardBrown }}>
+            <h1 className="mt-5 text-4xl font-semibold leading-[1.12] tracking-tight sm:text-5xl" style={{ color: COLORS.cardBrown }}>
               The marketplace where Uganda&apos;s brokers thrive.
             </h1>
-            <p className="mt-5 max-w-lg text-base text-gray-600">
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--zcanopy-muted)]">
               ZCanopy connects verified property brokers with clients through a single,
               elegant platform — listings, bookings, commissions, and payments, all in one place.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/brokers/signup"
-                className="rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90"
+                className="rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-[var(--zcanopy-shadow-sm)] transition-all hover:opacity-90 hover:shadow-[var(--zcanopy-shadow-md)]"
                 style={{ backgroundColor: COLORS.primary }}
               >
                 Become a broker
               </Link>
               <a
                 href="#features"
-                className="rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 transition-colors hover:border-[var(--zcanopy-primary)] hover:text-[var(--zcanopy-primary)]"
+                className="rounded-xl border border-[var(--zcanopy-border)] px-5 py-3 text-sm font-semibold text-[var(--zcanopy-card-brown)] transition-colors hover:border-[var(--zcanopy-primary)] hover:text-[var(--zcanopy-primary)]"
               >
                 Explore features
               </a>
@@ -135,7 +135,7 @@ export default function LandingPage() {
       {/* Full-width video */}
       <section className="relative">
         <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="relative overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
+          <div className="relative overflow-hidden rounded-3xl shadow-[var(--zcanopy-shadow-md)] ring-1 ring-black/5">
             <video
               className="h-[320px] w-full object-cover sm:h-[440px]"
               autoPlay
@@ -162,7 +162,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats */}
-      <section id="stats" className="border-y border-gray-200/60 bg-[var(--zcanopy-surface)]">
+      <section id="stats" className="border-y border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)]">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 py-12 md:grid-cols-4">
           {STATS.map((s) => (
             <div key={s.label} className="text-center">
@@ -197,7 +197,7 @@ export default function LandingPage() {
             { n: "03", t: "Commission split", d: "The platform commission is calculated and the broker's share is earmarked." },
             { n: "04", t: "Payout", d: "Verified brokers withdraw earnings straight to their mobile money wallet." },
           ].map((s) => (
-            <div key={s.n} className="rounded-2xl border border-black/5 bg-[var(--zcanopy-surface)] p-6 shadow-sm transition-all duration-300 hover:scale-105 hover:border-yellow-400 hover:shadow-lg">
+            <div key={s.n} className="rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-6 shadow-[var(--zcanopy-shadow-sm)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--zcanopy-accent-gold)] hover:shadow-[var(--zcanopy-shadow-md)]">
               <span className="text-3xl font-bold" style={{ color: COLORS.accentGold }}>{s.n}</span>
               <h3 className="mt-3 text-base font-semibold" style={{ color: COLORS.cardBrown }}>{s.t}</h3>
               <p className="mt-2 text-sm text-gray-600">{s.d}</p>
@@ -242,8 +242,8 @@ export default function LandingPage() {
       {/* Features */}
       <section id="features" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold" style={{ color: COLORS.cardBrown }}>Everything brokers need</h2>
-          <p className="mt-3 text-gray-600">
+          <h2 className="text-3xl font-semibold tracking-tight" style={{ color: COLORS.cardBrown }}>Everything brokers need</h2>
+          <p className="mt-3 text-[var(--zcanopy-muted)]">
             A complete toolkit to list, connect, and earn — built for clarity and trust.
           </p>
         </div>
@@ -251,8 +251,7 @@ export default function LandingPage() {
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className="rounded-2xl bg-[var(--zcanopy-surface)] p-6 shadow-sm transition-all hover:shadow-md"
-              style={{ border: "1px solid rgba(0,0,0,0.05)" }}
+              className="rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-6 shadow-[var(--zcanopy-shadow-sm)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--zcanopy-shadow-md)]"
             >
               <div
                 className="flex h-12 w-12 items-center justify-center rounded-2xl"
@@ -261,7 +260,7 @@ export default function LandingPage() {
                 <f.icon className="h-6 w-6" style={{ color: COLORS.primary }} />
               </div>
               <h3 className="mt-4 text-lg font-semibold" style={{ color: COLORS.cardBrown }}>{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">{f.text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--zcanopy-muted)]">{f.text}</p>
             </div>
           ))}
         </div>
@@ -271,8 +270,8 @@ export default function LandingPage() {
       <section id="how" className="bg-[var(--zcanopy-surface)]">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold" style={{ color: COLORS.cardBrown }}>How it works</h2>
-            <p className="mt-3 text-gray-600">From sign-up to your first payout in three simple steps.</p>
+            <h2 className="text-3xl font-semibold tracking-tight" style={{ color: COLORS.cardBrown }}>How it works</h2>
+            <p className="mt-3 text-[var(--zcanopy-muted)]">From sign-up to your first payout in three simple steps.</p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
@@ -280,10 +279,10 @@ export default function LandingPage() {
               { n: "02", t: "Get verified", d: "Our team reviews your documents, then emails your confirmation and broker code." },
               { n: "03", t: "List & earn", d: "Finish setup in the mobile app, publish properties, and track commissions live." },
             ].map((step) => (
-              <div key={step.n} className="relative rounded-2xl border border-gray-100 bg-[var(--background)] p-6">
+              <div key={step.n} className="relative rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--background)] p-6 shadow-[var(--zcanopy-shadow-sm)]">
                 <span className="text-4xl font-bold" style={{ color: `${COLORS.accentGold}` }}>{step.n}</span>
                 <h3 className="mt-3 text-lg font-semibold" style={{ color: COLORS.cardBrown }}>{step.t}</h3>
-                <p className="mt-2 text-sm text-gray-600">{step.d}</p>
+                <p className="mt-2 text-sm text-[var(--zcanopy-muted)]">{step.d}</p>
               </div>
             ))}
           </div>
@@ -293,7 +292,7 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div
-          className="overflow-hidden rounded-3xl p-10 text-center shadow-xl sm:p-14"
+          className="overflow-hidden rounded-3xl p-10 text-center shadow-[var(--zcanopy-shadow-md)] sm:p-14"
           style={{ background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.cardBrown})` }}
         >
           <h2 className="text-3xl font-bold text-white">Ready to grow your brokerage?</h2>
@@ -333,8 +332,7 @@ function PropertyShowcase() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl bg-[var(--zcanopy-surface)] p-3 shadow-2xl"
-      style={{ border: `1px solid ${COLORS.accentGold}55` }}
+      className="relative overflow-hidden rounded-3xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-3 shadow-[var(--zcanopy-shadow-md)]"
     >
       <div className="flex items-center justify-between px-2 pb-2 pt-1">
         <div className="flex items-center gap-2">

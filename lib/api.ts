@@ -157,6 +157,9 @@ export const adminApi = {
   propertyLocations: (token: string) =>
     apiFetch("/admin/property/locations", { token, fallback: mockData.propertyLocations() }),
 
+  property: (token: string, propertyId: string) =>
+    apiFetch(`/admin/properties/${propertyId}`, { token, fallback: mockData.property(propertyId) }),
+
   brokerDetails: (token: string, brokerId: string) =>
     apiFetch(`/admin/brokers/${brokerId}/details`, { token, fallback: mockData.brokerDetails(brokerId) }),
 

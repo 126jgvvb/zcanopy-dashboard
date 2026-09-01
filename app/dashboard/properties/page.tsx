@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
 import { GoogleMap, type PropertyLocation } from "@/components/GoogleMap";
-import { Home, Camera, Video } from "lucide-react";
+import PropertyCard from "@/components/PropertyCard";
 
 const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; maxVideos: number; maxVideoSizeMB: number }> = {
   fibrous: { maxProperties: 12, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
@@ -14,6 +15,7 @@ const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; ma
 };
 
 export default function PropertiesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [liveTick, setLiveTick] = useState(0);
@@ -55,7 +57,7 @@ export default function PropertiesPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search title or location"
-          className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm outline-none focus:border-[var(--zcanopy-primary)] transition-colors"
+          className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-4 py-2 text-sm outline-none"
         />
       </div>
 
@@ -103,118 +105,16 @@ export default function PropertiesPage() {
           ) : filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-gray-400">No properties found.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((p: any) => {
                 const limits = TIER_LIMITS[p.brokerTier?.toLowerCase?.()] ?? TIER_LIMITS.prop;
                 return (
-                  <div
+                  <PropertyCard
                     key={p.id}
-                    className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md hover:border-[var(--zcanopy-accent-gold)]"
-                  >
-                    <div className="relative h-48 w-full overflow-hidden rounded-t-2xl bg-gray-100">
-                      {p.imageUrl && p.imageUrl[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={p.imageUrl[0]}
-                          alt={p.title}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <div className="text-center">
-                            <Home className="mx-auto h-8 w-8 text-gray-400" />
-                            <p className="mt-2 text-xs text-gray-400">Property Image</p>
-                          </div>
-                        </div>
-                      )}
-                      <div className="absolute right-2 top-2">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${p.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                          {p.isAvailable ? "Available" : "Unavailable"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-1 flex-col p-5">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-semibold text-gray-800">{p.title}</p>
-                          <p className="mt-1 text-xs text-gray-400">{p.location}</p>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-xs leading-relaxed text-gray-500 line-clamp-2">
-                        {p.description}
-                      </p>
-                      <div className="mt-4 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Photos</span>
-                          <span className="text-xs font-medium text-gray-700">
-                            {p.photoCount ?? 0} / {limits.maxPhotos}
-                          </span>
-                        </div>
-                        <div className="flex gap-1">
-                          {Array.from({ length: limits.maxPhotos }).map((_, idx) => (
-                            <div
-                              key={idx}
-                              className="h-8 flex-1 rounded-md border border-dashed border-gray-200 flex items-center justify-center text-[10px] transition-colors"
-                              style={{
-                                backgroundColor: idx < (p.photoCount ?? 0) ? COLORS.primary : "transparent",
-                                color: idx < (p.photoCount ?? 0) ? "#ffffff" : "#d1d5db",
-                                borderStyle: idx < (p.photoCount ?? 0) ? "solid" : "dashed",
-                              }}
-                            >
-                              {idx < (p.photoCount ?? 0) ? <Camera className="h-3 w-3" /> : ""}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="mt-3 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Videos</span>
-                          <span className="text-xs font-medium text-gray-700">
-                            {p.videoCount ?? 0} / {limits.maxVideos}
-                          </span>
-                        </div>
-                        <div className="flex gap-1">
-                          {Array.from({ length: limits.maxVideos }).map((_, idx) => (
-                            <div
-                              key={idx}
-                              className="h-8 flex-1 rounded-md border border-dashed border-gray-200 flex items-center justify-center text-[10px] transition-colors"
-                              style={{
-                                backgroundColor: idx < (p.videoCount ?? 0) ? COLORS.accentGold : "transparent",
-                                color: idx < (p.videoCount ?? 0) ? "#ffffff" : "#d1d5db",
-                                borderStyle: idx < (p.videoCount ?? 0) ? "solid" : "dashed",
-                              }}
-                            >
-                              {idx < (p.videoCount ?? 0) ? <Video className="h-3 w-3" /> : ""}
-                            </div>
-                          ))}
-                        </div>
-                        {(p.videoCount ?? 0) > 0 ? (
-                          <video
-                            src={p.videoUrl && p.videoUrl[0] ? p.videoUrl[0] : "/sample_vid.mp4"}
-                            className="mt-2 w-full rounded-md bg-black"
-                            controls
-                            muted
-                            loop
-                            playsInline
-                            preload="metadata"
-                          >
-                            Your browser does not support the video tag.
-                          </video>
-                        ) : null}
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs capitalize text-gray-600">
-                          {p.propertyType}
-                        </span>
-                        <span className="rounded-lg px-2.5 py-1 text-xs capitalize" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
-                          {p.brokerTier || "prop"} tier
-                        </span>
-                        <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
-                          {p.brokersUniqueCode}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                    property={p}
+                    limits={limits}
+                    onClick={() => router.push(`/dashboard/properties/${p.id}`)}
+                  />
                 );
               })}
             </div>

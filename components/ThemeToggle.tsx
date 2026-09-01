@@ -45,7 +45,7 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
       onClick={toggle}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200/60 bg-[var(--zcanopy-surface)] transition-colors hover:border-[var(--zcanopy-primary)] ${className}`}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] text-[var(--zcanopy-card-brown)] shadow-[var(--zcanopy-shadow-sm)] transition-colors hover:border-[var(--zcanopy-primary)] hover:text-[var(--zcanopy-primary)] ${className}`}
     >
       {mounted ? (isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />) : <Moon className="h-4 w-4" />}
     </button>

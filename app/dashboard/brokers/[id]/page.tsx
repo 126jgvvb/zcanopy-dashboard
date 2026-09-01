@@ -7,7 +7,8 @@ import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { useAuth } from "@/components/AuthProvider";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
-import { ArrowLeft, Home, Camera, Video, IdCard, ZoomIn, ZoomOut } from "lucide-react";
+import PropertyCard from "@/components/PropertyCard";
+import { ArrowLeft, IdCard, ZoomIn, ZoomOut } from "lucide-react";
 
 const currency = (n: number) =>
   `UGX ${Number(n || 0).toLocaleString("en-UG")}`;
@@ -210,88 +211,9 @@ export default function BrokerDetailPage({
             ) : props.length === 0 ? (
               <p className="py-6 text-center text-sm text-gray-400">No properties.</p>
             ) : (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 {props.map((p: any) => (
-                  <div
-                    key={p.id}
-                    className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md hover:border-[var(--zcanopy-accent-gold)]"
-                  >
-                    <div className="relative h-52 w-full overflow-hidden rounded-t-2xl bg-gray-100">
-                      {p.imageUrl && p.imageUrl[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={p.imageUrl[0]}
-                          alt={p.title}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <div className="text-center">
-                            <Home className="mx-auto h-8 w-8 text-gray-400" />
-                            <p className="mt-1 text-xs text-gray-400">Property Image</p>
-                          </div>
-                        </div>
-                      )}
-                      <div className="absolute right-2 top-2">
-                        <span className={`rounded-full px-2 py-0.5 text-xs ${p.isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                          {p.isAvailable ? "Available" : "Unavailable"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-1 flex-col p-4">
-                      <p className="font-medium">{p.title}</p>
-                      <p className="text-xs text-gray-400">{p.location}</p>
-                      <p className="mt-2 text-xs text-gray-500 line-clamp-2">{p.description}</p>
-                      <div className="mt-3 space-y-2">
-                        <div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500">Photos</span>
-                            <span className="font-medium text-gray-700">
-                              {p.photoCount ?? 0} / {p.maxPhotos ?? limits.maxPhotos}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex flex-wrap gap-1.5">
-                            {Array.from({ length: p.maxPhotos ?? limits.maxPhotos }).map((_, idx) => (
-                              <div
-                                key={idx}
-                                className="h-10 w-10 rounded border border-dashed border-gray-200 flex items-center justify-center text-xs"
-                                style={{
-                                  backgroundColor: idx < (p.photoCount ?? 0) ? COLORS.primary : "transparent",
-                                  color: idx < (p.photoCount ?? 0) ? "#ffffff" : "#d1d5db",
-                                  borderStyle: idx < (p.photoCount ?? 0) ? "solid" : "dashed",
-                                }}
-                              >
-                                {idx < (p.photoCount ?? 0) ? <Camera className="h-3 w-3" /> : ""}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500">Videos</span>
-                            <span className="font-medium text-gray-700">
-                              {p.videoCount ?? 0} / {p.maxVideos ?? limits.maxVideos}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex gap-1.5">
-                            {Array.from({ length: p.maxVideos ?? limits.maxVideos }).map((_, idx) => (
-                              <div
-                                key={idx}
-                                className="h-16 flex-1 rounded border border-dashed border-gray-200 flex items-center justify-center text-base"
-                                style={{
-                                  backgroundColor: idx < (p.videoCount ?? 0) ? COLORS.accentGold : "transparent",
-                                  color: idx < (p.videoCount ?? 0) ? "#ffffff" : "#d1d5db",
-                                  borderStyle: idx < (p.videoCount ?? 0) ? "solid" : "dashed",
-                                }}
-                              >
-                                {idx < (p.videoCount ?? 0) ? <Video className="h-3 w-3" /> : ""}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <PropertyCard key={p.id} property={p} limits={limits} />
                 ))}
               </div>
             )}

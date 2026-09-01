@@ -14,7 +14,7 @@ const VALUES = [
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[var(--zcanopy-background)]">
-      <header className="border-b border-gray-200/60 bg-[var(--zcanopy-surface)]">
+      <header className="border-b border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link href="/home" className="flex items-center gap-2">
             <span
@@ -45,7 +45,7 @@ export default function AboutPage() {
 
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {VALUES.map((v) => (
-            <div key={v.title} className="rounded-2xl border border-gray-200/60 bg-[var(--zcanopy-surface)] p-5">
+            <div key={v.title} className="rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-5 shadow-[var(--zcanopy-shadow-sm)]">
               <v.icon className="h-6 w-6 text-gray-500" />
               <h3 className="mt-3 font-semibold" style={{ color: COLORS.cardBrown }}>{v.title}</h3>
               <p className="mt-1 text-sm text-gray-500">{v.text}</p>

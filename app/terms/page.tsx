@@ -90,7 +90,7 @@ export default function TermsPage() {
   return (
     <main className="min-h-screen bg-[var(--zcanopy-background)]">
       {/* Header */}
-      <header className="border-b border-gray-200/60 bg-[var(--zcanopy-surface)]">
+      <header className="border-b border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link href="/home" className="flex items-center gap-2">
             <span

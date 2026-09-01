@@ -54,21 +54,21 @@ export default function Sidebar({
   );
 
   return (
-    <aside className="flex w-64 flex-col border-r border-gray-200/50 bg-[var(--zcanopy-card-brown)] text-white shadow-xl">
-      <div className="flex items-center gap-3 px-6 py-6">
+    <aside className="flex w-64 flex-col border-r border-black/10 bg-[var(--zcanopy-card-brown)] text-white shadow-[var(--zcanopy-shadow-md)]">
+      <div className="flex items-center gap-3 px-6 py-7">
         <span
-          className="flex h-10 w-10 items-center justify-center rounded-xl font-bold text-lg shadow-lg"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold shadow-lg ring-1 ring-white/20"
           style={{ backgroundColor: COLORS.accentGold, color: COLORS.cardBrown }}
         >
           Z
         </span>
         <div>
-          <span className="text-lg font-bold tracking-tight">ZCanopy</span>
-          <span className="block text-[10px] uppercase tracking-widest text-white/60">Admin Console</span>
+          <span className="text-lg font-semibold tracking-tight">ZCanopy</span>
+          <span className="block text-[10px] uppercase tracking-[0.18em] text-white/55">Admin Console</span>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-2">
+      <nav className="flex-1 space-y-0.5 px-3 py-1">
         {visible.map((item) => {
           const active =
             pathname === item.href ||
@@ -80,7 +80,7 @@ export default function Sidebar({
               className={`hover-gold flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
                 active
                   ? "bg-[var(--zcanopy-accent-gold)] font-semibold text-[var(--zcanopy-card-brown)] shadow-md"
-                  : "text-white/80"
+                  : "text-white/78 hover:text-[#4a2f1c]"
               }`}
             >
               {item.icon}
@@ -94,16 +94,16 @@ export default function Sidebar({
       </nav>
 
       <div className="border-t border-white/10 p-3">
-        <div className="mb-2 rounded-xl bg-white/10 p-3">
-          <p className="text-sm font-semibold">{admin.username}</p>
-          <p className="text-xs text-white/60 capitalize">{admin.role.replace("_", " ")}</p>
+        <div className="mb-2 rounded-xl bg-white/[0.08] p-3 ring-1 ring-white/10">
+          <p className="text-sm font-semibold tracking-tight">{admin.username}</p>
+          <p className="text-xs capitalize text-white/55">{admin.role.replace("_", " ")}</p>
         </div>
         <button
           onClick={() => {
             logout();
             router.replace("/login");
           }}
-          className="hover-gold w-full rounded-xl px-3 py-2.5 text-left text-sm text-white/80"
+          className="hover-gold w-full rounded-xl px-3 py-2.5 text-left text-sm text-white/78"
         >
           Sign out
         </button>

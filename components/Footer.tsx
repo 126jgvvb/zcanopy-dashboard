@@ -32,7 +32,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-gray-200/60 bg-[var(--zcanopy-surface)]">
+    <footer className="border-t border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)]">
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
@@ -111,7 +111,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-gray-200/60 pt-6 text-sm text-gray-500 sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-[var(--zcanopy-border)] pt-6 text-sm text-[var(--zcanopy-muted)] sm:flex-row">
           <p>© {year} ZCanopy. All rights reserved.</p>
           <div className="flex gap-5">
             <Link href="/login" className="hover:text-[var(--zcanopy-primary)]">Admin</Link>
