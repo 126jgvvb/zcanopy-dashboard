@@ -133,6 +133,8 @@ export default function PropertyDetailPage({
               <InfoRow label="Title" value={data.title} highlight />
               <InfoRow label="Location" value={data.location} />
               <InfoRow label="Type" value={data.propertyType} />
+              <InfoRow label="Price" value={data.price ? `UGX ${data.price.toLocaleString()}` : undefined} mono highlight />
+              <InfoRow label="Broker Booking Fee" value={data.brokerBookingFee ? `UGX ${data.brokerBookingFee.toLocaleString()}` : undefined} mono />
               <InfoRow label="Broker Code" value={data.brokersUniqueCode} mono />
               <InfoRow label="Tier" value={data.brokerTier} />
               <InfoRow label="Status" value={data.isAvailable ? "Available" : "Unavailable"} />
