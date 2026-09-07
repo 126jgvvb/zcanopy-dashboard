@@ -37,6 +37,7 @@ function parseGeo(field: string | null): { lat: number; lng: number } | null {
     typeof (parsed as { lng?: unknown }).lng === "number"
   ) {
     const { lat, lng } = parsed as { lat: number; lng: number };
+    if (lat === 0 && lng === 0) return null;
     return { lat, lng };
   }
 

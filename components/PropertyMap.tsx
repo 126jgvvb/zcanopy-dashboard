@@ -15,6 +15,7 @@ function parseGeo(field: string | null): { lat: number; lng: number } | null {
   try {
     const parsed = JSON.parse(field);
     if (parsed && typeof parsed.lat === "number" && typeof parsed.lng === "number") {
+      if (parsed.lat === 0 && parsed.lng === 0) return null;
       return { lat: parsed.lat, lng: parsed.lng };
     }
   } catch {

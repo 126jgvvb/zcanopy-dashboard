@@ -171,4 +171,14 @@ export const mockData = {
       { id: "p5", title: "1BR Studio in Ntinda", description: "Cozy studio apartment, ideal for young professionals. Gated community.", propertyType: "apartment", location: "Ntinda, Kampala", brokerCode: "BRK-003", price: 320000, priceLabel: "Booking", imageUrl: "/images.jpg", isAvailable: true },
     ],
   }),
+  comments: (page = 1, limit = 20, propertyId?: string) => {
+    const all = [
+      { id: "c1", propertyId: "p1", customerName: "John Mukasa", customerPhone: "+256701111111", customerEmail: "john@example.com", comment: "Great apartment, very clean and secure.", rating: 5, createdAt: "2026-07-18T04:30:00Z" },
+      { id: "c2", propertyId: "p2", customerName: "Sarah Kiggundu", customerPhone: "+256702222222", customerEmail: "sarah@example.com", comment: "Nice villa but the garden needs maintenance.", rating: 4, createdAt: "2026-07-17T15:10:00Z" },
+      { id: "c3", propertyId: "p1", customerName: "Michael Okello", customerPhone: "+256703333333", customerEmail: "michael@example.com", comment: "Good location and friendly broker.", rating: 5, createdAt: "2026-07-16T08:45:00Z" },
+    ];
+    const filtered = propertyId ? all.filter((c) => c.propertyId === propertyId) : all;
+    const start = (page - 1) * limit;
+    return { comments: filtered.slice(start, start + limit), total: filtered.length };
+  },
 };

@@ -299,6 +299,13 @@ export const adminApi = {
 
   featuredProperties: () =>
     apiFetch("/public/properties/featured", { fallback: mockData.featuredProperties() }),
+
+  comments: (token: string, page = 1, limit = 20, propertyId?: string) =>
+    apiFetch("/admin/comments", {
+      token,
+      query: { page, limit, propertyId: propertyId ?? "" },
+      fallback: mockData.comments(page, limit, propertyId),
+    }),
 };
 
 export const authApi = {

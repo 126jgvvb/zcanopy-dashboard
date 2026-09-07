@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import Sidebar from "@/components/Sidebar";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
 import ThemeToggle from "@/components/ThemeToggle";
+import CookieBanner from "@/components/CookieBanner";
 import { COLORS } from "@/lib/theme";
 
 export default function DashboardLayout({
@@ -51,6 +52,7 @@ export default function DashboardLayout({
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-6 lg:p-8 [animation:fadeIn_0.35s_ease]">{children}</main>
+        <CookieBanner />
       </div>
     </div>
   );
