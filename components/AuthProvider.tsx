@@ -22,6 +22,7 @@ interface AuthContextValue {
   admin: AdminProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<AdminProfile>;
+  googleLogin: (idToken: string) => Promise<AdminProfile>;
   devLogin: (email: string, password: string) => Promise<AdminProfile>;
   bypass: () => void;
   logout: () => void;
@@ -95,6 +96,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: result.email,
       role: result.role,
       token: result.token,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+    setTokenCookie(profile.token);
+    setAdmin(profile);
+    return profile;
+  }, []);
+
+  const googleLogin = useCallback(async (idToken: string) => {
+    const result = await fetch(`${API_BASE}/admin/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+    if (!result.ok) {
+      throw new ApiError("Google sign-in failed", result.status);
+    }
+    const data = await result.json();
+    if (!data?.token) {
+      throw new ApiError("Invalid Google login response", 401);
+    }
+    const profile: AdminProfile = {
+      id: data.id,
+      username: data.username,
+      email: data.email,
+      role: data.role,
+      token: data.token,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     setTokenCookie(profile.token);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
@@ -19,13 +19,15 @@ export default function LoginForm({
   redirect?: string;
 }) {
   const router = useRouter();
-  const { admin, login, devLogin, bypass, loading: authLoading } = useAuth();
+  const { admin, login, googleLogin, devLogin, bypass, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [devBusy, setDevBusy] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && admin) {
@@ -73,6 +75,32 @@ export default function LoginForm({
     router.replace(redirect || "/dashboard");
   }
 
+  useEffect(() => {
+    if (!window.google?.accounts?.id) return;
+    window.google.accounts.id.initialize({
+      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+      callback: async (response) => {
+        if (!response.credential) return;
+        setGoogleLoading(true);
+        try {
+          await googleLogin(response.credential);
+          router.replace(redirect || "/dashboard");
+        } catch {
+          setError("Google sign-in failed. Please try again.");
+        } finally {
+          setGoogleLoading(false);
+        }
+      },
+    });
+    if (googleButtonRef.current) {
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        width: '100%',
+        text: 'signin_with',
+      });
+    }
+  }, [login, router, redirect]);
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
@@ -85,7 +113,11 @@ export default function LoginForm({
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)] p-4">
       <div className="w-full max-w-md rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-8 shadow-[var(--zcanopy-shadow-md)]">
         <div className="mb-6 flex flex-col items-center gap-3">
-          <ZLoadingIndicator size={56} color={COLORS.primary} />
+          <img
+            src="/logo.svg"
+            alt="ZCanopy"
+            className="h-14 w-14 object-contain"
+          />
           <h1 className="text-2xl font-semibold tracking-tight text-[var(--zcanopy-card-brown)]">
             ZCanopy Admin
           </h1>
@@ -134,6 +166,15 @@ export default function LoginForm({
               "Sign in"
             )}
           </button>
+
+          <div className="mt-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--zcanopy-border)]" />
+            <span className="text-xs text-[var(--zcanopy-muted)]">or</span>
+            <div className="h-px flex-1 bg-[var(--zcanopy-border)]" />
+          </div>
+
+          <div ref={googleButtonRef} className="mt-3 flex justify-center" />
+          {googleLoading && <p className="text-center text-sm text-gray-500">Signing in with Google...</p>}
         </form>
 
         <div className="mt-6">

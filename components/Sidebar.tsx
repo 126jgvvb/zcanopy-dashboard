@@ -58,19 +58,19 @@ export default function Sidebar({
   return (
     <aside className="flex w-64 flex-col border-r border-black/10 bg-[var(--zcanopy-card-brown)] text-white shadow-[var(--zcanopy-shadow-md)]">
       <div className="flex items-center gap-3 px-6 py-7">
-        <span
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold shadow-lg ring-1 ring-white/20"
-          style={{ backgroundColor: COLORS.accentGold, color: COLORS.cardBrown }}
-        >
-          Z
-        </span>
-        <div>
-          <span className="text-lg font-semibold tracking-tight">ZCanopy</span>
-          <span className="block text-[10px] uppercase tracking-[0.18em] text-white/55">Admin Console</span>
+          <img
+            src="/logo.svg"
+            alt="ZCanopy"
+            className="h-10 w-10 object-contain"
+            style={{ mixBlendMode: 'multiply' }}
+          />
+          <div>
+            <span className="text-lg font-semibold tracking-tight">ZCanopy</span>
+            <span className="block text-[10px] uppercase tracking-[0.18em] text-white/55">Admin Console</span>
+          </div>
         </div>
-      </div>
 
-      <nav className="flex-1 space-y-0.5 px-3 py-1">
+        <nav className="flex-1 space-y-0.5 px-3 py-1">
         {visible.map((item) => {
           const active =
             pathname === item.href ||
