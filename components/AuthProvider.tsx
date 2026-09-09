@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const getToken = useCallback(() => admin?.token ?? null, [admin]);
 
   return (
-    <AuthContext.Provider value={{ admin, loading, login, devLogin, bypass, logout, getToken }}>
+    <AuthContext.Provider value={{ admin, loading, login, googleLogin, devLogin, bypass, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );
