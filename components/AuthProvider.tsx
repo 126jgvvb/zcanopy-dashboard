@@ -10,6 +10,9 @@ import {
 } from "react";
 import { adminApi, ApiError } from "@/lib/api";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+
 export interface AdminProfile {
   id: string;
   username: string;
