@@ -79,7 +79,7 @@ export default function LoginForm({
     if (!window.google?.accounts?.id) return;
     window.google.accounts.id.initialize({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-      callback: async (response) => {
+      callback: async (response: { credential?: string }) => {
         if (!response.credential) return;
         setGoogleLoading(true);
         try {
