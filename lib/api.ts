@@ -262,6 +262,13 @@ export const adminApi = {
   activeSessions: (token: string) =>
     apiFetch("/admin/customers/active-sessions", { token, fallback: mockData.activeSessions() }),
 
+  searches: (token: string, page = 1, limit = 20, sessionToken?: string, query?: string) =>
+    apiFetch("/admin/searches", {
+      token,
+      query: { page, limit, sessionToken: sessionToken ?? "", query: query ?? "" },
+      fallback: mockData.searches(page, limit, sessionToken, query),
+    }),
+
   invoices: (token: string, page = 1, limit = 10, status?: string) =>
     apiFetch("/admin/invoices", {
       token,

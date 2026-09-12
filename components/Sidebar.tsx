@@ -17,6 +17,7 @@ import {
   PanelBottomOpen,
   Search,
   MessageSquare,
+  History,
 } from "lucide-react";
 import { COLORS, can, type AdminCapability } from "@/lib/theme";
 
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/invoices", label: "Invoices", capability: "manage_finances", icon: <FileText className="h-4 w-4" /> },
   { href: "/dashboard/messages", label: "Messages", capability: "manage_messages", icon: <Mail className="h-4 w-4" /> },
   { href: "/dashboard/comments", label: "Reviews", capability: "view_dashboard", icon: <MessageSquare className="h-4 w-4" /> },
+  { href: "/dashboard/searches", label: "Searches", capability: "view_dashboard", icon: <History className="h-4 w-4" /> },
   { href: "/dashboard/admins", label: "Admins", capability: "manage_admins", icon: <UserCog className="h-4 w-4" /> },
   { href: "/dashboard/sessions", label: "Sessions", capability: "view_sessions", icon: <Gauge className="h-4 w-4" /> },
   { href: "/dashboard/logs", label: "System Logs", capability: "view_logs", icon: <PanelBottomOpen className="h-4 w-4" /> },
