@@ -81,6 +81,12 @@ export const MOCK_CUSTOMERS = [
   { id: "c8", email: "miriam.nakato@example.com", firstName: "Miriam", lastName: "Nakato", phoneNumber: "+256708888888", isVerified: true, authProvider: "facebook", isActive: true, createdAt: "2026-07-10T14:00:00Z", updatedAt: "2026-08-10T14:00:00Z" },
 ];
 
+const MOCK_BOOKINGS = [
+  { id: "bk1", customerId: "c1", customerName: "John Mukasa", customerEmail: "john.mukasa@example.com", customerPhone: "+256701111111", propertyId: "p1", propertyTitle: "2BR Apartment in Kololo", date: "2026-07-20T10:00:00Z", status: "confirmed", amount: 850000, transactionCode: "TXN-BK-001" },
+  { id: "bk2", customerId: "c2", customerName: "Sarah Kiggundu", customerEmail: "sarah.kiggundu@example.com", customerPhone: "+256702222222", propertyId: "p2", propertyTitle: "3BR Villa in Muyenga", date: "2026-07-22T11:00:00Z", status: "pending", amount: 1500000, transactionCode: "TXN-BK-002" },
+  { id: "bk3", customerId: "c3", customerName: "Michael Okello", customerEmail: "michael.okello@example.com", customerPhone: "+256703333333", propertyId: "p3", propertyTitle: "Office Space in CBD", date: "2026-07-18T09:00:00Z", status: "cancelled", amount: 2200000, transactionCode: "TXN-BK-003" },
+];
+
 const MOCK_INVOICES = [
   { id: "inv1", invoiceNumber: "INV-2026-001", recipientName: "Alice Namuli", recipientEmail: "alice@example.com", brokerCode: "BRK-001", issueDate: "2026-07-01T00:00:00Z", dueDate: "2026-07-15T00:00:00Z", amount: 1250000, currency: "UGX", status: "sent", description: "Subscription - Fibrous tier (July)" },
   { id: "inv2", invoiceNumber: "INV-2026-002", recipientName: "David Ssempala", recipientEmail: "david@example.com", brokerCode: "BRK-004", issueDate: "2026-07-01T00:00:00Z", dueDate: "2026-07-15T00:00:00Z", amount: 1250000, currency: "UGX", status: "sent", description: "Subscription - Fibrous tier (July)" },
@@ -251,5 +257,34 @@ export const mockData = {
 
     const start = (page - 1) * limit;
     return { customers: filtered.slice(start, start + limit), total: filtered.length, page, limit };
+  },
+
+  customerDetails: (customerId: string) => {
+    const customer = MOCK_CUSTOMERS.find((c) => c.id === customerId) || MOCK_CUSTOMERS[0];
+    return { customer };
+  },
+
+  customerTransactions: (customerId: string, page = 1, limit = 10) => {
+    const tx = (MOCK_TRANSACTIONS as any[]).filter((t) => t.recipientEmail === (MOCK_CUSTOMERS[0]?.email ?? ''));
+    const start = (page - 1) * limit;
+    return { transactions: tx.slice(start, start + limit), total: tx.length, page, limit };
+  },
+
+  customerInvoices: (customerId: string, page = 1, limit = 10) => {
+    const inv = (MOCK_INVOICES as any[]).filter((inv) => inv.recipientEmail === (MOCK_CUSTOMERS[0]?.email ?? ''));
+    const start = (page - 1) * limit;
+    return { invoices: inv.slice(start, start + limit), total: inv.length, page, limit };
+  },
+
+  customerBookings: (customerId: string, page = 1, limit = 10) => {
+    const bookings = (MOCK_BOOKINGS as any[]).filter((b) => b.customerId === customerId);
+    const start = (page - 1) * limit;
+    return { bookings: bookings.slice(start, start + limit), total: bookings.length, page, limit };
+  },
+
+  customerFavorites: (customerId: string, page = 1, limit = 10) => {
+    const favs = MOCK_PROPERTIES.slice(0, 3);
+    const start = (page - 1) * limit;
+    return { favorites: favs.slice(start, start + limit), total: favs.length, page, limit };
   },
 };
