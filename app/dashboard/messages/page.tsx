@@ -70,8 +70,8 @@ export default function MessagesPage() {
     );
   });
 
-  const notifTypes = Array.from(new Set((notifications.data?.notifications ?? []).map((n: any) => n.type).filter(Boolean)));
-  const notifChannels = Array.from(new Set((notifications.data?.notifications ?? []).map((n: any) => n.channel).filter(Boolean)));
+  const notifTypes: string[] = Array.from(new Set((notifications.data?.notifications ?? []).map((n: any) => n.type).filter(Boolean)));
+  const notifChannels: string[] = Array.from(new Set((notifications.data?.notifications ?? []).map((n: any) => n.channel).filter(Boolean)));
 
   const filteredNotifications = (notifications.data?.notifications ?? []).filter((n: any) => {
     if (notifType !== "all" && n.type !== notifType) return false;

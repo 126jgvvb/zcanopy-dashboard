@@ -413,8 +413,8 @@ function NotificationsTable({
   channelFilter: string;
   onChannelChange: (value: string) => void;
 }) {
-  const types = Array.from(new Set(items.map((n) => n.type).filter(Boolean)));
-  const channels = Array.from(new Set(items.map((n) => n.channel).filter(Boolean)));
+  const types: string[] = Array.from(new Set(items.map((n: any) => n.type).filter(Boolean)));
+  const channels: string[] = Array.from(new Set(items.map((n: any) => n.channel).filter(Boolean)));
 
   const filtered = items.filter((n) => {
     if (typeFilter !== "all" && n.type !== typeFilter) return false;
