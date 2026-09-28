@@ -157,7 +157,7 @@ export default function PropertiesPage() {
                 price?: number;
                 brokerBookingFee?: number;
               }) => {
-                const limits = TIER_LIMITS[p.brokerTier?.toLowerCase?.()] ?? TIER_LIMITS.prop;
+                const limits = TIER_LIMITS[(p.brokerTier?.toLowerCase?.() ?? 'prop')] ?? TIER_LIMITS.prop;
                 return (
                   <PropertyCard
                     key={p.id}
