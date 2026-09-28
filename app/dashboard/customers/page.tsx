@@ -25,7 +25,7 @@ export default function CustomersPage() {
     [],
   );
 
-  const filteredCustomers = (allCustomers.data?.customers ?? []).filter((c) => {
+  const filteredCustomers = (allCustomers.data?.customers ?? []).filter((c: any) => {
     const updatedAt = new Date(c.updatedAt);
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - 1);
