@@ -7,6 +7,7 @@ import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
 import { GoogleMap, type PropertyLocation } from "@/components/GoogleMap";
 import PropertyCard from "@/components/PropertyCard";
+import { Search } from "lucide-react";
 
 const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; maxVideos: number; maxVideoSizeMB: number }> = {
   fibrous: { maxProperties: 12, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
@@ -14,12 +15,15 @@ const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; ma
   prop: { maxProperties: 5, maxPhotos: 15, maxVideos: 1, maxVideoSizeMB: 500 },
 };
 
+const AVAILABILITY = ["all", "available", "unavailable"] as const;
+
 export default function PropertiesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [liveTick, setLiveTick] = useState(0);
   const [mapTab, setMapTab] = useState<"map" | "grid">("map");
+  const [availability, setAvailability] = useState<(typeof AVAILABILITY)[number]>("all");
 
   useEffect(() => {
     const interval = setInterval(() => setLiveTick((t) => t + 1), 30000);
@@ -33,11 +37,22 @@ export default function PropertiesPage() {
 
   const locations = useAdminData((token) => adminApi.propertyLocations(token), [liveTick]);
 
-  const filtered = (properties.data?.properties ?? []).filter((p: any) =>
-    !search ||
-    p.title?.toLowerCase().includes(search.toLowerCase()) ||
-    p.location?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = (properties.data?.properties ?? []).filter((p: {
+    id: string;
+    title?: string;
+    location?: string;
+    isAvailable: boolean;
+    brokerTier?: string;
+  }) => {
+    if (availability === "available" && !p.isAvailable) return false;
+    if (availability === "unavailable" && p.isAvailable) return false;
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      p.title?.toLowerCase().includes(query) ||
+      p.location?.toLowerCase().includes(query)
+    );
+  });
 
   const mappedLocations: PropertyLocation[] = (locations.data?.locations ?? []) as PropertyLocation[];
 
@@ -53,11 +68,31 @@ export default function PropertiesPage() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
           </span>
         </div>
+        <div className="flex gap-2">
+          {AVAILABILITY.map((a) => (
+            <button
+              key={a}
+              onClick={() => setAvailability(a)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+                availability === a
+                  ? "text-white shadow-md"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+              style={availability === a ? { backgroundColor: COLORS.primary } : {}}
+            >
+              {a}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+        <Search className="h-4 w-4 text-gray-400" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search title or location"
-          className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-4 py-2 text-sm outline-none"
+          className="w-full bg-transparent text-sm outline-none"
         />
       </div>
 
@@ -97,7 +132,7 @@ export default function PropertiesPage() {
           )}
         </Panel>
       ) : (
-        <Panel title="All Properties">
+        <Panel title={`All Properties (${filtered.length})`}>
           {properties.loading ? (
             <LoadingState label="Loading properties" />
           ) : properties.error ? (
@@ -106,7 +141,22 @@ export default function PropertiesPage() {
             <p className="py-8 text-center text-sm text-gray-400">No properties found.</p>
           ) : (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((p: any) => {
+              {filtered.map((p: {
+                id: string;
+                title?: string;
+                location?: string;
+                isAvailable: boolean;
+                brokerTier?: string;
+                imageUrl?: string[];
+                videoUrl?: string[];
+                propertyType?: string;
+                brokersUniqueCode?: string;
+                createdAt?: string;
+                photoCount?: number;
+                videoCount?: number;
+                price?: number;
+                brokerBookingFee?: number;
+              }) => {
                 const limits = TIER_LIMITS[p.brokerTier?.toLowerCase?.()] ?? TIER_LIMITS.prop;
                 return (
                   <PropertyCard

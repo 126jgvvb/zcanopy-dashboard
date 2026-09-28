@@ -18,7 +18,16 @@ export default function DashboardLayout({
   const { admin, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && !admin) router.replace("/login");
+    console.log('[DashboardLayout] guard', { loading, admin: !!admin });
+    if (!loading && !admin) {
+      console.log('[DashboardLayout] redirecting to /login');
+      try {
+        router.replace("/login");
+      } catch (err) {
+        console.log('[DashboardLayout] router.replace failed', err);
+        window.location.href = "/login";
+      }
+    }
   }, [admin, loading, router]);
 
   if (loading || !admin) {

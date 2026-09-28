@@ -35,6 +35,7 @@ export type AdminCapability =
   | "manage_admins"
   | "manage_finances"
   | "manage_messages"
+  | "manage_customers"
   | "view_logs"
   | "view_sessions";
 
@@ -43,6 +44,7 @@ const ADMIN_ALLOWED = new Set<AdminCapability>([
   "manage_brokers",
   "manage_finances",
   "manage_messages",
+  "manage_customers",
   "view_logs",
   "view_sessions",
 ]);

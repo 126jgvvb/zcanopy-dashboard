@@ -7,7 +7,7 @@
  */
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://api-gateway-production-f9cc.up.railway.app/api";
 
 export class ApiError extends Error {
   status: number;
@@ -15,6 +15,33 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+export function toDate(value: unknown): Date {
+  if (value instanceof Date) return value;
+  if (typeof value === "number") return new Date(value);
+  if (typeof value === "string") return new Date(value);
+  if (value && typeof value === "object" && "low" in value && "high" in value) {
+    const high = (value as { high: number }).high || 0;
+    const low = (value as { low: number }).low || 0;
+    const unsigned = (value as { unsigned?: boolean }).unsigned;
+    const ms = unsigned
+      ? high * 0x100000000 + low
+      : high * 0x100000000 + (low >>> 0);
+    return new Date(ms);
+  }
+  return new Date(0);
+}
+
+export function formatDate(value: unknown): string {
+  const d = toDate(value);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 
@@ -76,7 +103,8 @@ export async function apiFetch<T = any>(
     const text = await res.text();
     if (text) {
       try {
-        data = JSON.parse(text) as Record<string, unknown>;
+        const parsed = JSON.parse(text) as Record<string, unknown>;
+        data = parsed.encrypted ? await decryptResponse(parsed) : parsed;
       } catch {
         data = text;
       }
@@ -89,6 +117,9 @@ export async function apiFetch<T = any>(
       throw new ApiError(message as string, res.status);
     }
 
+    if (typeof window !== 'undefined') {
+      console.log('[apiFetch] raw server response', path, JSON.parse(JSON.stringify(data)));
+    }
     return data as T;
   } catch (err) {
     // Only fall back to mock data when the server is actually down/failing,
@@ -101,24 +132,129 @@ export async function apiFetch<T = any>(
       }
       return fallback as T;
     }
+    // Wrap raw network errors in a user-friendly ApiError.
+    if (!(err instanceof ApiError)) {
+      const rawMessage = err instanceof Error ? err.message : String(err);
+      const friendly = /Cannot POST|Cannot GET|Failed to fetch|NetworkError|fetch.*failed|net::ERR/i.test(rawMessage)
+        ? "Unable to connect to the server. Please check your connection or try again later."
+        : rawMessage;
+      throw new ApiError(friendly, 0);
+    }
     throw err;
   }
 }
 
-import { mockData } from "@/lib/mockData";
+export interface PresignResponse {
+  uploadUrl: string;
+  key: string;
+  publicUrl: string;
+}
+
+async function getUploadPresignedUrl(filename: string, contentType: string, folder = 'properties'): Promise<PresignResponse> {
+  const res = await fetch(`${API_BASE}/upload/presign`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename, contentType, folder }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get upload URL: ${res.status}`);
+  }
+
+  const text = await res.text();
+  if (!text) return { uploadUrl: '', key: '', publicUrl: '' };
+  try {
+    const parsed = JSON.parse(text);
+    return parsed.encrypted ? await decryptResponse(parsed) : parsed;
+  } catch {
+    return { uploadUrl: '', key: '', publicUrl: '' };
+  }
+}
+
+export async function uploadToSpaces(file: File, folder = 'properties'): Promise<string> {
+  try {
+    const { uploadUrl, publicUrl } = await getUploadPresignedUrl(file.name, file.type, folder);
+
+    if (!uploadUrl) {
+      throw new Error('Missing upload URL from presign response');
+    }
+
+    const res = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Upload failed: ${res.status}`);
+    }
+
+    return publicUrl;
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return uploadToSpacesViaProxy(file, folder);
+    }
+    throw error;
+  }
+}
+
+async function uploadToSpacesViaProxy(file: File, folder = 'properties'): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/upload/proxy?folder=${encodeURIComponent(folder)}`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Proxy upload failed: ${res.status} - ${text}`);
+  }
+
+  const data = await res.json();
+  return data.publicUrl;
+}
+
+import { mockData, MOCK_CUSTOMERS } from "@/lib/mockData";
+import { decryptResponse } from "@/lib/crypto";
 
 export const adminApi = {
   login: (email: string, password: string) =>
-    apiFetch<{ id: string; username: string; email: string; role: string; token: string }>(
-      "/admin/login",
+    apiFetch<{
+      id: string;
+      username: string;
+      email: string;
+      role: string;
+      token: string;
+      accessToken?: string;
+      refreshToken?: string;
+    }>(
+      "/auth/login",
       { method: "POST", body: { email, password } },
-    ),
+    ).then((result) => ({
+      ...result,
+      token: result.token || result.accessToken || "",
+      refreshToken: result.refreshToken || "",
+    })),
 
   devLogin: (email: string, password: string) =>
-    apiFetch<{ id: string; username: string; email: string; role: string; token: string }>(
+    apiFetch<{ id: string; username: string; email: string; role: string; token: string; refreshToken?: string }>(
       "/auth/dev-login",
       { method: "POST", body: { email, password } },
     ),
+
+  refresh: (refreshToken: string) =>
+    apiFetch<{ token: string; accessToken?: string; refreshToken?: string }>(
+      "/auth/refresh",
+      { method: "POST", body: { token: refreshToken } },
+    ).then((result) => ({
+      token: result.token || result.accessToken || "",
+      refreshToken: result.refreshToken || "",
+    })),
 
   commissions: (token: string) =>
     apiFetch("/admin/commissions", { token, fallback: mockData.commission() }),
@@ -133,7 +269,15 @@ export const adminApi = {
     apiFetch<{ entries: { month: string; income: number }[] }>(
       "/admin/income/monthly",
       { token, fallback: mockData.income() },
-    ),
+    ).then((data) => {
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        const entries = (data as any)?.entries;
+        if (!entries || entries.length === 0) {
+          return mockData.income();
+        }
+      }
+      return data;
+    }),
 
   brokers: (token: string, page = 1, limit = 10) =>
     apiFetch("/admin/brokers", { token, query: { page, limit }, fallback: mockData.brokers() }),
@@ -252,6 +396,12 @@ export const adminApi = {
   withdraw: (token: string, payload: Record<string, unknown>) =>
     apiFetch("/admin/withdraw", { method: "POST", token, body: payload, fallback: { success: true, message: "Withdrawal initiated (mock)", transactionId: "mock-txn-1", referenceNumber: "REF-MOCK-001", status: "pending", netAmount: payload.amount } }),
 
+  sendWithdrawalOtp: (token: string, payload: { email: string; amount: number; walletType?: string }) =>
+    apiFetch("/admin/withdraw/otp/send", { method: "POST", token, body: payload, fallback: { success: true, message: "OTP sent to admin email", expiresIn: 300 } }),
+
+  verifyWithdrawalOtp: (token: string, payload: { email: string; otp: string }) =>
+    apiFetch("/admin/withdraw/otp/verify", { method: "POST", token, body: payload, fallback: { success: true, message: "OTP verified successfully", valid: true } }),
+
   logs: (token: string, page = 1, limit = 10, level?: string, service?: string) =>
     apiFetch("/admin/logs", {
       token,
@@ -262,12 +412,37 @@ export const adminApi = {
   activeSessions: (token: string) =>
     apiFetch("/admin/customers/active-sessions", { token, fallback: mockData.activeSessions() }),
 
-  searches: (token: string, page = 1, limit = 20, sessionToken?: string, query?: string) =>
+  searches: (token: string, page = 1, limit = 20, customerId?: string, query?: string) =>
     apiFetch("/admin/searches", {
       token,
-      query: { page, limit, sessionToken: sessionToken ?? "", query: query ?? "" },
-      fallback: mockData.searches(page, limit, sessionToken, query),
+      query: { page, limit, customerId: customerId ?? "", query: query ?? "" },
+      fallback: mockData.searches(page, limit, customerId, query),
     }),
+
+  customers: (token: string, page = 1, limit = 10, isActive?: boolean, search?: string) =>
+    apiFetch("/admin/customers", {
+      token,
+      query: { page, limit, isActive, search: search || '' },
+      fallback: mockData.customers(page, limit, isActive, search),
+    }),
+
+  customerDetails: (token: string, customerId: string) =>
+    apiFetch(`/admin/customers/${customerId}`, { token, fallback: mockData.customerDetails(customerId) }),
+
+  customerTransactions: (token: string, customerId: string, page = 1, limit = 10) =>
+    apiFetch(`/admin/customers/${customerId}/transactions`, { token, query: { page, limit }, fallback: mockData.customerTransactions(customerId, page, limit) }),
+
+  customerInvoices: (token: string, customerId: string, page = 1, limit = 10) =>
+    apiFetch(`/admin/customers/${customerId}/invoices`, { token, query: { page, limit }, fallback: mockData.customerInvoices(customerId, page, limit) }),
+
+  customerBookings: (token: string, customerId: string, page = 1, limit = 10) =>
+    apiFetch(`/admin/customers/${customerId}/bookings`, { token, query: { page, limit }, fallback: mockData.customerBookings(customerId, page, limit) }),
+
+  customerFavorites: (token: string, customerId: string, page = 1, limit = 10) =>
+    apiFetch(`/admin/customers/${customerId}/favorites`, { token, query: { page, limit }, fallback: mockData.customerFavorites(customerId, page, limit) }),
+
+  exportCustomers: (token: string, isActive?: boolean) =>
+    apiFetch("/admin/customers/export", { token, query: { isActive: isActive ?? "" }, fallback: { csv: "id,email,firstName,lastName,phoneNumber,isVerified,authProvider,isActive,createdAt\n" + MOCK_CUSTOMERS.map(c => `${c.id},${c.email},${c.firstName},${c.lastName},${c.phoneNumber},${c.isVerified},${c.authProvider},${c.isActive},${c.createdAt}`).join("\n") } }),
 
   invoices: (token: string, page = 1, limit = 10, status?: string) =>
     apiFetch("/admin/invoices", {

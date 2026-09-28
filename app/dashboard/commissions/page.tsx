@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useAdminData, Panel, StatCard, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
+import { Search } from "lucide-react";
 
 const currency = (n: number) =>
   `UGX ${Number(n || 0).toLocaleString("en-UG")}`;
@@ -21,6 +23,7 @@ export default function CommissionsPage() {
   const commission = useAdminData((token) => adminApi.currentCommission(token));
   const rates = useAdminData((token) => adminApi.commissions(token));
   const brokerCommissions = useAdminData((token) => adminApi.brokerCommissions(token));
+  const [search, setSearch] = useState("");
 
   if (commission.loading) return <LoadingState label="Loading commissions" />;
   if (commission.error) return <ErrorState message={commission.error} />;
@@ -32,6 +35,16 @@ export default function CommissionsPage() {
   };
   const r = rates.data ?? { minimumWithdrawal: 10000 };
   const bc: BrokerCommission[] = brokerCommissions.data?.commissions ?? [];
+
+  const filtered = bc.filter((row) => {
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      row.brokerName?.toLowerCase().includes(query) ||
+      row.brokerCode?.toLowerCase().includes(query) ||
+      row.tier?.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -55,12 +68,22 @@ export default function CommissionsPage() {
         </div>
       </Panel>
 
-      <Panel title="Commission per Broker">
+      <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+        <Search className="h-4 w-4 text-gray-400" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by broker name, code or tier"
+          className="w-full bg-transparent text-sm outline-none"
+        />
+      </div>
+
+      <Panel title={`Commission per Broker (${filtered.length})`}>
         {brokerCommissions.loading ? (
           <LoadingState label="Loading broker commissions" />
         ) : brokerCommissions.error ? (
           <ErrorState message={brokerCommissions.error} />
-        ) : bc.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <p className="py-8 text-center text-sm text-gray-400">No commission data yet.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -76,7 +99,7 @@ export default function CommissionsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {bc.map((row: BrokerCommission) => (
+                {filtered.map((row: BrokerCommission) => (
                   <tr key={row.brokerId} className="hover:bg-[#D1A054]/5 transition-colors">
                     <td className="py-3 pr-4">
                       <p className="font-medium">{row.brokerName}</p>

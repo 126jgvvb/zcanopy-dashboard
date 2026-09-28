@@ -12,8 +12,15 @@ import {
 } from "@/components/ui";
 import { adminApi, ApiError } from "@/lib/api";
 import { COLORS, can } from "@/lib/theme";
+import { Search } from "lucide-react";
 
-const TIERS = ["basic", "standard", "premium", "enterprise"];
+const VERIFICATION_STATUSES = ["all", "verified", "pending"] as const;
+
+function parseSubscriptionTier(value: string | undefined | null): string {
+  const raw = value || "";
+  const parts = raw.split(",").map((part) => part.trim()).filter(Boolean);
+  return parts[0] || "—";
+}
 
 export default function BrokersPage() {
   const { admin } = useAuth();
@@ -22,6 +29,8 @@ export default function BrokersPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [acting, setActing] = useState<string | null>(null);
   const [approvingAll, setApprovingAll] = useState(false);
+  const [search, setSearch] = useState("");
+  const [verificationStatus, setVerificationStatus] = useState<(typeof VERIFICATION_STATUSES)[number]>("all");
 
   const brokers = useAdminData((token) => adminApi.brokers(token, 1, 20));
   const pending = useAdminData((token) =>
@@ -61,6 +70,23 @@ export default function BrokersPage() {
 
   const canManage = can(admin?.role, "manage_brokers");
 
+  const filterBrokers = (data: any[]) => {
+    return data.filter((b: any) => {
+      if (verificationStatus === "verified" && !b.isVerified) return false;
+      if (verificationStatus === "pending" && b.isVerified) return false;
+      const query = search.trim().toLowerCase();
+      if (!query) return true;
+      return (
+        b.username?.toLowerCase().includes(query) ||
+        b.email?.toLowerCase().includes(query) ||
+        b.brokerBrandName?.toLowerCase().includes(query)
+      );
+    });
+  };
+
+  const filteredBrokers = filterBrokers(brokers.data?.brokers ?? []);
+  const filteredPending = filterBrokers(pending.data?.brokers ?? []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -92,40 +118,63 @@ export default function BrokersPage() {
         ) : null}
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+          <Search className="h-4 w-4 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, email or brand"
+            className="w-full bg-transparent text-sm outline-none"
+          />
+        </div>
+        <div className="flex gap-2">
+          {VERIFICATION_STATUSES.map((s) => (
+            <button
+              key={s}
+              onClick={() => setVerificationStatus(s)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+                verificationStatus === s
+                  ? "text-white shadow-md"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+              style={verificationStatus === s ? { backgroundColor: COLORS.primary } : {}}
+            >
+              {s === "all" ? "All" : s}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {actionError ? <ErrorState message={actionError} /> : null}
 
       {tab === "all" ? (
-        <Panel title="Brokers">
+        <Panel title={`Brokers (${filteredBrokers.length})`}>
           {brokers.loading ? (
             <LoadingState label="Loading brokers" />
           ) : brokers.error ? (
             <ErrorState message={brokers.error} />
           ) : (
             <BrokerTable
-              rows={brokers.data?.brokers ?? []}
+              rows={filteredBrokers}
               canManage={canManage}
               onView={(id) => router.push(`/dashboard/brokers/${id}`)}
               onDelete={(id) =>
                 runAction(`del-${id}`, () => adminApi.deleteBroker(admin!.token, id))
-              }
-              onTier={(id, tier) =>
-                runAction(`tier-${id}`, () =>
-                  adminApi.editBrokerTier(admin!.token, id, tier),
-                )
               }
               acting={acting}
             />
           )}
         </Panel>
       ) : (
-        <Panel title="Pending Verifications">
+        <Panel title={`Pending Verifications (${filteredPending.length})`}>
           {pending.loading ? (
             <LoadingState label="Loading verifications" />
           ) : pending.error ? (
             <ErrorState message={pending.error} />
           ) : (
             <BrokerTable
-              rows={pending.data?.brokers ?? []}
+              rows={filteredPending}
               canManage={canManage}
               pending
               onView={(id) => router.push(`/dashboard/brokers/${id}`)}
@@ -156,7 +205,6 @@ function BrokerTable({
   pending,
   onView,
   onDelete,
-  onTier,
   onApprove,
   onReject,
   acting,
@@ -166,7 +214,6 @@ function BrokerTable({
   pending?: boolean;
   onView: (id: string) => void;
   onDelete?: (id: string) => void;
-  onTier?: (id: string, tier: string) => void;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
   acting: string | null;
@@ -210,24 +257,9 @@ function BrokerTable({
                 </span>
               </td>
               <td className="py-2 pr-4">
-                {pending || !canManage ? (
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs capitalize text-gray-600">
-                    {b.subscriptionTier ?? "—"}
-                  </span>
-                ) : (
-                  <select
-                    defaultValue={b.subscriptionTier}
-                    disabled={acting?.startsWith(`tier-${b.id}`)}
-                    onChange={(e) => onTier?.(b.id, e.target.value)}
-                    className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs capitalize"
-                  >
-                    {TIERS.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs capitalize text-gray-600">
+                  {parseSubscriptionTier(b.subscriptionTier)}
+                </span>
               </td>
               <td className="py-2 pr-4">
                 <span

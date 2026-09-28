@@ -8,12 +8,13 @@ import { COLORS } from "@/lib/theme";
 
 export default function Home() {
   const router = useRouter();
-  const { admin, loading } = useAuth();
+  const { loading } = useAuth();
 
   useEffect(() => {
     if (loading) return;
-    router.replace(admin ? "/dashboard" : "/home");
-  }, [admin, loading, router]);
+    console.log('[HomePage] redirecting to /login');
+    router.replace("/login");
+  }, [loading, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">

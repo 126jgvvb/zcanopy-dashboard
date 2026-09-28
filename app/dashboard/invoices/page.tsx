@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui";
 import { adminApi, ApiError } from "@/lib/api";
 import { COLORS, can } from "@/lib/theme";
+import { Search } from "lucide-react";
 
 const STATUSES = ["all", "sent", "pending", "failed"] as const;
 
@@ -39,17 +40,38 @@ export default function InvoicesPage() {
   const { admin } = useAuth();
   const router = useRouter();
   const [status, setStatus] = useState<(typeof STATUSES)[number]>("all");
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const invoices = useAdminData((token) =>
-    adminApi.invoices(token, 1, 20, status === "all" ? undefined : status),
+  const statusRef = useRef(status);
+  const invoices = useAdminData(
+    (token) => adminApi.invoices(token, 1, 20, statusRef.current === "all" ? undefined : statusRef.current),
+    [],
   );
+
+  useEffect(() => {
+    statusRef.current = status;
+    invoices.reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const canManage = can(admin?.role, "manage_finances");
   const rows: any[] = invoices.data?.invoices ?? [];
-  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+
+  const filtered = rows.filter((inv) => {
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      inv.invoiceNumber?.toLowerCase().includes(query) ||
+      inv.recipientName?.toLowerCase().includes(query) ||
+      inv.recipientEmail?.toLowerCase().includes(query) ||
+      inv.description?.toLowerCase().includes(query)
+    );
+  });
+
+  const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -63,8 +85,8 @@ export default function InvoicesPage() {
   function toggleAll() {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (allSelected) rows.forEach((r) => next.delete(r.id));
-      else rows.forEach((r) => next.add(r.id));
+      if (allSelected) filtered.forEach((r) => next.delete(r.id));
+      else filtered.forEach((r) => next.add(r.id));
       return next;
     });
   }
@@ -118,16 +140,28 @@ export default function InvoicesPage() {
         ) : null}
       </div>
 
+      <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+        <Search className="h-4 w-4 text-gray-400" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by invoice, recipient or description"
+          className="w-full bg-transparent text-sm outline-none"
+        />
+      </div>
+
       {actionError ? <ErrorState message={actionError} /> : null}
 
-      <Panel title="Invoices">
+      <Panel title={`Invoices (${filtered.length})`}>
         {invoices.loading ? (
           <LoadingState label="Loading invoices" />
         ) : invoices.error ? (
           <ErrorState message={invoices.error} />
+        ) : filtered.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-400">No invoices found.</p>
         ) : (
           <InvoiceTable
-            rows={rows}
+            rows={filtered}
             canManage={canManage}
             selected={selected}
             allSelected={allSelected}

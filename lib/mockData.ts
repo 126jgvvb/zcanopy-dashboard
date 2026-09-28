@@ -21,6 +21,10 @@ const MOCK_TRANSACTIONS = [
   { id: "t4", type: "booking", date: "2026-07-15T09:20:00Z", reason: "Property booking - Muyenga Villa", recipientName: "Brian Ochieng", recipientPhone: "+256702345678", recipientEmail: "brian@example.com", senderName: "Customer", senderPhone: "+256707777777", senderEmail: "customer@example.com", amount: 1500000, status: "completed", emailStatus: "sent", referenceNumber: "REF-004", transactionCode: "TXN-004" },
   { id: "t5", type: "subscription", date: "2026-07-14T11:00:00Z", reason: "Enterprise subscription - July", recipientName: "Eva Nakato", recipientPhone: "+256705678901", recipientEmail: "eva@example.com", senderName: "Customer", senderPhone: "+256706666666", senderEmail: "customer@example.com", amount: 350000, status: "completed", emailStatus: "sent", referenceNumber: "REF-005", transactionCode: "TXN-005" },
   { id: "t6", type: "booking", date: "2026-07-13T16:45:00Z", reason: "Property booking - Kira Land", recipientName: "Alice Namuli", recipientPhone: "+256701234567", recipientEmail: "alice@example.com", senderName: "Customer", senderPhone: "+256705555555", senderEmail: "customer@example.com", amount: 420000, status: "failed", emailStatus: "sent", referenceNumber: "REF-006", transactionCode: "TXN-006" },
+  { id: "t7", type: "subscription", date: "2026-06-20T09:00:00Z", reason: "Premium subscription - June", recipientName: "Alice Namuli", recipientPhone: "+256701234567", recipientEmail: "alice@example.com", senderName: "Customer", senderPhone: "+256709999999", senderEmail: "customer@example.com", amount: 1250000, status: "completed", emailStatus: "sent", referenceNumber: "REF-007", transactionCode: "TXN-007" },
+  { id: "t8", type: "booking", date: "2026-06-15T14:20:00Z", reason: "Property booking - Entebbe Villa", recipientName: "Brian Ochieng", recipientPhone: "+256702345678", recipientEmail: "brian@example.com", senderName: "Customer", senderPhone: "+256707777777", senderEmail: "customer@example.com", amount: 1800000, status: "completed", emailStatus: "sent", referenceNumber: "REF-008", transactionCode: "TXN-008" },
+  { id: "t9", type: "subscription", date: "2026-05-10T08:30:00Z", reason: "Premium subscription - May", recipientName: "David Ssempala", recipientPhone: "+256704567890", recipientEmail: "david@example.com", senderName: "Customer", senderPhone: "+256708888888", senderEmail: "customer@example.com", amount: 1250000, status: "completed", emailStatus: "sent", referenceNumber: "REF-009", transactionCode: "TXN-009" },
+  { id: "t10", type: "booking", date: "2026-05-05T11:10:00Z", reason: "Property booking - Jinja Apartment", recipientName: "Carol Atim", recipientPhone: "+256703456789", recipientEmail: "carol@example.com", senderName: "Customer", senderPhone: "+256707777777", senderEmail: "customer@example.com", amount: 950000, status: "completed", emailStatus: "sent", referenceNumber: "REF-010", transactionCode: "TXN-010" },
 ];
 
 const MOCK_ADMINS = [
@@ -64,6 +68,17 @@ const MOCK_SESSIONS = [
   { sessionId: "sess-001", deviceId: "dev-abc-123", createdAt: 1752800000000, lastActivityAt: 1752800000000, locationLat: 0.3476, locationLng: 32.5825, locationUpdatedAt: 1752800000000, ttlSecondsRemaining: 3600 },
   { sessionId: "sess-002", deviceId: "dev-def-456", createdAt: 1752713600000, lastActivityAt: 1752796800000, locationLat: 0.0521, locationLng: 32.4639, locationUpdatedAt: 1752796800000, ttlSecondsRemaining: 1800 },
   { sessionId: "sess-003", deviceId: "dev-ghi-789", createdAt: 1752627200000, lastActivityAt: 1752783600000, locationLat: -0.0917, locationLng: 31.4636, locationUpdatedAt: 1752783600000, ttlSecondsRemaining: 7200 },
+];
+
+export const MOCK_CUSTOMERS = [
+  { id: "c1", email: "john.mukasa@example.com", firstName: "John", lastName: "Mukasa", phoneNumber: "+256701111111", isVerified: true, authProvider: "email", isActive: true, createdAt: "2026-01-15T10:00:00Z", updatedAt: "2026-09-25T10:00:00Z" },
+  { id: "c2", email: "sarah.kiggundu@example.com", firstName: "Sarah", lastName: "Kiggundu", phoneNumber: "+256702222222", isVerified: true, authProvider: "email", isActive: true, createdAt: "2026-02-20T09:00:00Z", updatedAt: "2026-08-20T09:00:00Z" },
+  { id: "c3", email: "michael.okello@example.com", firstName: "Michael", lastName: "Okello", phoneNumber: "+256703333333", isVerified: false, authProvider: "phone", isActive: true, createdAt: "2026-03-10T07:30:00Z", updatedAt: "2026-07-10T07:30:00Z" },
+  { id: "c4", email: "grace.namukasa@example.com", firstName: "Grace", lastName: "Namukasa", phoneNumber: "+256704444444", isVerified: true, authProvider: "google", isActive: true, createdAt: "2026-04-05T08:00:00Z", updatedAt: "2026-06-05T08:00:00Z" },
+  { id: "c5", email: "peter.ssentamu@example.com", firstName: "Peter", lastName: "Ssentamu", phoneNumber: "+256705555555", isVerified: true, authProvider: "email", isActive: false, createdAt: "2026-05-12T10:30:00Z", updatedAt: "2026-05-12T10:30:00Z" },
+  { id: "c6", email: "linda.akello@example.com", firstName: "Linda", lastName: "Akello", phoneNumber: "+256706666666", isVerified: false, authProvider: "phone", isActive: true, createdAt: "2026-06-18T11:00:00Z", updatedAt: "2026-09-18T11:00:00Z" },
+  { id: "c7", email: "james.byaruhanga@example.com", firstName: "James", lastName: "Byaruhanga", phoneNumber: "+256707777777", isVerified: true, authProvider: "email", isActive: true, createdAt: "2026-07-01T09:00:00Z", updatedAt: "2026-09-27T09:00:00Z" },
+  { id: "c8", email: "miriam.nakato@example.com", firstName: "Miriam", lastName: "Nakato", phoneNumber: "+256708888888", isVerified: true, authProvider: "facebook", isActive: true, createdAt: "2026-07-10T14:00:00Z", updatedAt: "2026-08-10T14:00:00Z" },
 ];
 
 const MOCK_INVOICES = [
@@ -141,7 +156,33 @@ export const mockData = {
     return { logs: logs.slice(start, start + limit), total: logs.length, page, limit };
   },
   activeSessions: () => ({ sessions: MOCK_SESSIONS, total: MOCK_SESSIONS.length }),
-  income: () => ({ entries: MOCK_INCOME }),
+  income: () => {
+    const successful = MOCK_TRANSACTIONS.filter((t) => {
+      const rawStatus = String(t.status || '').toLowerCase();
+      const isSuccess = rawStatus === 'completed' || rawStatus === 'success' || rawStatus === 'SUCCESS';
+      const reason = String(t.reason || '').toLowerCase();
+      return isSuccess && (reason.includes('subscription') || reason.includes('booking'));
+    });
+
+    const monthlyMap = new Map<string, { income: number; label: string }>();
+    for (const t of successful) {
+      const date = new Date(t.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const existing = monthlyMap.get(monthKey) || { income: 0, label };
+      monthlyMap.set(monthKey, {
+        income: existing.income + Number(t.amount || 0),
+        label: existing.label || label,
+      });
+    }
+
+    const entries = Array.from(monthlyMap.entries())
+      .map(([monthKey, data]) => ({ monthKey, month: data.label, income: data.income }))
+      .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
+      .map(({ month, income }) => ({ month, income }));
+
+    return { entries };
+  },
   commission: () => ({ platformCommission: 18500000, bookingCommission: 4200000, totalEarnings: 22700000 }),
   currentCommission: () => ({ platformCommission: 18500000, bookingCommission: 4200000, totalEarnings: 22700000 }),
   brokerCommissions: () => ({
@@ -191,5 +232,24 @@ export const mockData = {
     const queryFiltered = query ? filtered.filter((s) => s.query.toLowerCase().includes(query.toLowerCase())) : filtered;
     const start = (page - 1) * limit;
     return { searches: queryFiltered.slice(start, start + limit), total: queryFiltered.length };
+  },
+  customers: (page = 1, limit = 10, isActive?: boolean, search?: string) => {
+    let filtered = MOCK_CUSTOMERS;
+
+    if (isActive !== undefined) {
+      filtered = filtered.filter((c) => c.isActive === isActive);
+    }
+
+    const query = (search || '').trim().toLowerCase();
+    if (query) {
+      filtered = filtered.filter((c) =>
+        [c.firstName, c.lastName, c.email, c.phoneNumber].some((value) =>
+          String(value).toLowerCase().includes(query),
+        ),
+      );
+    }
+
+    const start = (page - 1) * limit;
+    return { customers: filtered.slice(start, start + limit), total: filtered.length, page, limit };
   },
 };

@@ -7,6 +7,9 @@ import { useAuth } from "@/components/AuthProvider";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi, ApiError } from "@/lib/api";
 import { COLORS, can, ROLE_LABELS } from "@/lib/theme";
+import { Search } from "lucide-react";
+
+const STATUSES = ["all", "active", "inactive"] as const;
 
 export default function AdminsPage() {
   const { admin } = useAuth();
@@ -14,8 +17,21 @@ export default function AdminsPage() {
   const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
+  const [status, setStatus] = useState<(typeof STATUSES)[number]>("all");
+  const [search, setSearch] = useState("");
 
   const canManage = can(admin?.role, "manage_admins");
+
+  const filtered = (admins.data?.admins ?? []).filter((a: any) => {
+    if (status === "active" && !a.isActive) return false;
+    if (status === "inactive" && a.isActive) return false;
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      a.username?.toLowerCase().includes(query) ||
+      a.email?.toLowerCase().includes(query)
+    );
+  });
 
   async function run(key: string, fn: () => Promise<unknown>) {
     setError(null);
@@ -32,10 +48,23 @@ export default function AdminsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold tracking-tight text-[var(--zcanopy-card-brown)]">
-          Administrators ({admins.data?.admins?.length ?? 0})
-        </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2">
+          {STATUSES.map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatus(s)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+                status === s
+                  ? "text-white shadow-md"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+              style={status === s ? { backgroundColor: COLORS.primary } : {}}
+            >
+              {s === "all" ? "All admins" : s === "active" ? "Active" : "Inactive"}
+            </button>
+          ))}
+        </div>
         {canManage ? (
           <button
             onClick={() => setShowInvite((s) => !s)}
@@ -44,6 +73,16 @@ export default function AdminsPage() {
             {showInvite ? "Close" : "Generate Invite"}
           </button>
         ) : null}
+      </div>
+
+      <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+        <Search className="h-4 w-4 text-gray-400" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by username or email"
+          className="w-full bg-transparent text-sm outline-none"
+        />
       </div>
 
       {error ? <ErrorState message={error} /> : null}
@@ -57,11 +96,13 @@ export default function AdminsPage() {
         />
       ) : null}
 
-      <Panel title="All Admins">
+      <Panel title={`All Admins (${filtered.length})`}>
         {admins.loading ? (
           <LoadingState label="Loading admins" />
         ) : admins.error ? (
           <ErrorState message={admins.error} />
+        ) : filtered.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-400">No admins found.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -75,7 +116,7 @@ export default function AdminsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--zcanopy-border)]">
-                {(admins.data?.admins ?? []).map((a: any) => (
+                {filtered.map((a: any) => (
                    <tr key={a.id} className="transition-colors hover:bg-[rgba(209,160,84,0.08)]">
                     <td className="py-2.5 pr-4 font-medium">{a.username}</td>
                     <td className="py-2.5 pr-4 text-gray-500">{a.email}</td>

@@ -20,10 +20,66 @@ export default function WalletPage() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+
   const canManage = can(admin?.role, "manage_finances");
 
-  async function handleWithdraw(e: React.FormEvent) {
+  async function handleSendOtp(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
+    if (!amount || Number(amount) <= 0) {
+      setError("Enter a valid amount.");
+      return;
+    }
+    setError(null);
+    setResult(null);
+    setSubmitting(true);
+    try {
+      const res = await adminApi.sendWithdrawalOtp(admin!.token, {
+        email: admin!.email,
+        amount: Number(amount),
+        walletType: "platform_commission",
+      });
+      setResult(res?.message ?? "OTP sent to your email.");
+      setOtpSent(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to send OTP.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleVerifyOtp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setResult(null);
+    setVerifying(true);
+    try {
+      const res = await adminApi.verifyWithdrawalOtp(admin!.token, {
+        email: admin!.email,
+        otp,
+      });
+      if (res?.valid) {
+        setVerified(true);
+        setResult("OTP verified. You can now withdraw.");
+      } else {
+        setError(res?.message ?? "Invalid OTP.");
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "OTP verification failed.");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  async function handleWithdraw(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!verified) {
+      setError("Verify the withdrawal OTP first.");
+      return;
+    }
     setError(null);
     setResult(null);
     setSubmitting(true);
@@ -37,6 +93,9 @@ export default function WalletPage() {
       wallet.reload();
       setAmount("");
       setPhone("");
+      setOtp("");
+      setOtpSent(false);
+      setVerified(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Withdrawal failed.");
     } finally {
@@ -98,19 +157,56 @@ export default function WalletPage() {
               </select>
             </label>
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            {result ? (
-              <p className="text-sm text-green-600">{result}</p>
-            ) : null}
+            {!otpSent && (
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={submitting}
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                style={{ backgroundColor: COLORS.primary }}
+              >
+                {submitting ? "Sending OTP…" : "Send Withdrawal OTP"}
+              </button>
+            )}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-              style={{ backgroundColor: COLORS.primary }}
-            >
-              {submitting ? "Processing…" : "Withdraw"}
-            </button>
+            {otpSent && !verified && (
+              <form onSubmit={handleVerifyOtp} className="space-y-3">
+                <label className="flex flex-col gap-1 text-sm font-medium">
+                  Enter OTP sent to {admin?.email}
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="123456"
+                    className="rounded-xl border border-gray-300 bg-white px-3 py-2 outline-none focus:border-[var(--zcanopy-primary)]"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={verifying}
+                  className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                  style={{ backgroundColor: COLORS.primary }}
+                >
+                  {verifying ? "Verifying…" : "Verify OTP"}
+                </button>
+              </form>
+            )}
+
+            {verified && (
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                style={{ backgroundColor: COLORS.primary }}
+              >
+                {submitting ? "Processing…" : "Withdraw"}
+              </button>
+            )}
+
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {result ? <p className="text-sm text-green-600">{result}</p> : null}
           </form>
         )}
       </Panel>

@@ -1,28 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
+import { Search } from "lucide-react";
+
+const RATINGS = ["all", "5", "4", "3", "2", "1"] as const;
 
 export default function CommentsPage() {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [rating, setRating] = useState<(typeof RATINGS)[number]>("all");
 
   const comments = useAdminData(
-    (token) => adminApi.comments(token, page, 20),
-    [page],
+    (token) => adminApi.comments(token, 1, 20),
+    [],
   );
 
-  const items = (comments.data?.comments ?? []) as any[];
+  const items = (comments.data?.comments ?? []) as Array<{
+    id: string;
+    comment: string;
+    customerName?: string;
+    propertyTitle?: string;
+    propertyId?: string;
+    rating?: number;
+    createdAt?: string;
+  }>;
 
   const filtered = items.filter((c) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
+    if (rating !== "all" && String(c.rating ?? "") !== rating) return false;
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
     return (
-      (c.comment || "").toLowerCase().includes(q) ||
-      (c.customerName || "").toLowerCase().includes(q) ||
-      (c.propertyTitle || "").toLowerCase().includes(q)
+      c.comment.toLowerCase().includes(query) ||
+      (c.customerName || "").toLowerCase().includes(query) ||
+      (c.propertyTitle || "").toLowerCase().includes(query)
     );
   });
 
@@ -32,15 +44,35 @@ export default function CommentsPage() {
         <h2 className="text-lg font-semibold" style={{ color: COLORS.cardBrown }}>
           Property Reviews & Comments
         </h2>
+        <div className="flex gap-2">
+          {RATINGS.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRating(r)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+                rating === r
+                  ? "text-white shadow-md"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+              style={rating === r ? { backgroundColor: COLORS.primary } : {}}
+            >
+              {r === "all" ? "All" : `${r} ★`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+        <Search className="h-4 w-4 text-gray-400" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search comments, customers, or properties..."
-          className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-4 py-2 text-sm outline-none"
+          className="w-full bg-transparent text-sm outline-none"
         />
       </div>
 
-      <Panel title="All Reviews">
+      <Panel title={`All Reviews (${filtered.length})`}>
         {comments.loading ? (
           <LoadingState label="Loading reviews" />
         ) : comments.error ? (

@@ -7,6 +7,9 @@ import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi, ApiError } from "@/lib/api";
 import { can, COLORS } from "@/lib/theme";
 import { RecipientPicker, type RecipientOption } from "@/components/RecipientPicker";
+import { Search } from "lucide-react";
+
+const RATING_FILTERS = ["all", "5", "4", "3", "2", "1"] as const;
 
 export default function MessagesPage() {
   const { admin } = useAuth();
@@ -14,6 +17,11 @@ export default function MessagesPage() {
   const [brokers, setBrokers] = useState<RecipientOption[]>([]);
   const [customers, setCustomers] = useState<RecipientOption[]>([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
+  const [ratingFilter, setRatingFilter] = useState<(typeof RATING_FILTERS)[number]>("all");
+  const [commentSearch, setCommentSearch] = useState("");
+  const [notifSearch, setNotifSearch] = useState("");
+  const [notifType, setNotifType] = useState("all");
+  const [notifChannel, setNotifChannel] = useState("all");
 
   useEffect(() => {
     const interval = setInterval(() => setLiveTick((t) => t + 1), 15000);
@@ -21,18 +29,15 @@ export default function MessagesPage() {
   }, []);
 
   const system = useAdminData((token) => adminApi.systemMessages(token, 1, 15), [liveTick]);
-  const client = useAdminData((token) => adminApi.clientMessages(token, 1, 15), [liveTick]);
-  const notifications = useAdminData((token) =>
-    adminApi.notifications(token, { limit: 15 }),
-    [liveTick],
-  );
+  const comments = useAdminData((token) => adminApi.comments(token, 1, 15), [liveTick]);
+  const notifications = useAdminData((token) => adminApi.notifications(token, { limit: 15 }), [liveTick]);
 
   useEffect(() => {
     setLoadingRecipients(true);
     Promise.all([
       adminApi.brokers(admin!.token, 1, 100).catch(() => ({ brokers: [] })),
-      adminApi.clientMessages(admin!.token, 1, 100).catch(() => ({ messages: [] })),
-    ]).then(([brokersData, clientsData]) => {
+      adminApi.comments(admin!.token, 1, 100).catch(() => ({ comments: [] })),
+    ]).then(([brokersData, commentsData]) => {
       const brokerOptions: RecipientOption[] = (brokersData.brokers ?? []).map((b: any) => ({
         id: b.id,
         name: b.username,
@@ -40,10 +45,10 @@ export default function MessagesPage() {
         phone: b.phoneNumber,
         type: "broker" as const,
       }));
-      const customerOptions: RecipientOption[] = (clientsData.messages ?? []).map((m: any) => ({
-        id: m.id,
-        name: m.senderName,
-        phone: m.senderPhone,
+      const customerOptions: RecipientOption[] = (commentsData.comments ?? []).map((c: any) => ({
+        id: c.id,
+        name: c.customerName,
+        phone: c.customerPhone,
         type: "customer" as const,
       }));
       setBrokers(brokerOptions);
@@ -53,6 +58,32 @@ export default function MessagesPage() {
   }, [admin]);
 
   const canManage = can(admin?.role, "manage_messages");
+
+  const filteredComments = (comments.data?.comments ?? []).filter((c: any) => {
+    if (ratingFilter !== "all" && String(c.rating ?? "") !== ratingFilter) return false;
+    const query = commentSearch.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      (c.customerName ?? "").toLowerCase().includes(query) ||
+      (c.comment ?? "").toLowerCase().includes(query) ||
+      (c.customerPhone ?? "").toLowerCase().includes(query)
+    );
+  });
+
+  const notifTypes = Array.from(new Set((notifications.data?.notifications ?? []).map((n: any) => n.type).filter(Boolean)));
+  const notifChannels = Array.from(new Set((notifications.data?.notifications ?? []).map((n: any) => n.channel).filter(Boolean)));
+
+  const filteredNotifications = (notifications.data?.notifications ?? []).filter((n: any) => {
+    if (notifType !== "all" && n.type !== notifType) return false;
+    if (notifChannel !== "all" && n.channel !== notifChannel) return false;
+    const query = notifSearch.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      (n.title ?? "").toLowerCase().includes(query) ||
+      (n.content ?? "").toLowerCase().includes(query) ||
+      (n.recipient ?? "").toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -91,49 +122,161 @@ export default function MessagesPage() {
         )}
       </Panel>
 
-      <Panel title="Client Messages">
-        {client.loading ? (
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Client Messages</h3>
+        <div className="flex gap-2">
+          {RATING_FILTERS.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRatingFilter(r)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+                ratingFilter === r
+                  ? "text-white shadow-md"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+              style={ratingFilter === r ? { backgroundColor: COLORS.primary } : {}}
+            >
+              {r === "all" ? "All" : `${r} ★`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Panel title={`Client Messages (${filteredComments.length})`}>
+        {comments.loading ? (
           <LoadingState />
-        ) : (client.data?.messages?.length ?? 0) === 0 ? (
+        ) : filteredComments.length === 0 ? (
           <p className="py-6 text-center text-sm text-gray-400">No client messages.</p>
         ) : (
-          <ul className="divide-y divide-gray-100">
-            {(client.data?.messages ?? []).map((m: any, i: number) => (
-              <li key={i} className="py-3 transition-colors hover:bg-[#D1A054]/5">
-                <p className="text-sm">
-                  <span className="font-medium">{m.senderName}</span>{" "}
-                  <span className="text-gray-400">({m.senderPhone})</span>
-                </p>
-                <p className="text-xs text-gray-500">{m.message}</p>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  value={commentSearch}
+                  onChange={(e) => setCommentSearch(e.target.value)}
+                  placeholder="Search comments..."
+                  className="w-full bg-transparent text-sm outline-none"
+                />
+              </div>
+              <select
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value as any)}
+                className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--zcanopy-primary)]"
+              >
+                <option value="all">All ratings</option>
+                <option value="5">5 ★</option>
+                <option value="4">4 ★</option>
+                <option value="3">3 ★</option>
+                <option value="2">2 ★</option>
+                <option value="1">1 ★</option>
+              </select>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs uppercase text-gray-400">
+                  <tr>
+                    <th className="py-2 pr-4">Customer</th>
+                    <th className="py-2 pr-4">Phone</th>
+                    <th className="py-2 pr-4">Comment</th>
+                    <th className="py-2 pr-4">Rating</th>
+                    <th className="py-2">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredComments.map((c: any) => (
+                    <tr key={c.id} className="transition-colors hover:bg-[#D1A054]/5">
+                      <td className="py-2 pr-4 font-medium">{c.customerName || "-"}</td>
+                      <td className="py-2 pr-4 text-gray-600">{c.customerPhone || "-"}</td>
+                      <td className="py-2 pr-4 text-gray-700">{c.comment || "-"}</td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium">
+                          {c.rating ?? 0} / 5
+                        </span>
+                      </td>
+                      <td className="py-2 text-gray-500">
+                        {c.createdAt ? new Date(c.createdAt).toLocaleString() : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </Panel>
 
       <Panel title="Sent Notifications">
         {notifications.loading ? (
           <LoadingState />
-        ) : (notifications.data?.notifications?.length ?? 0) === 0 ? (
-          <p className="py-6 text-center text-sm text-gray-400">
-            No sent notifications yet.
-          </p>
+        ) : filteredNotifications.length === 0 ? (
+          <p className="py-6 text-center text-sm text-gray-400">No notifications yet.</p>
         ) : (
-          <ul className="divide-y divide-gray-100">
-            {(notifications.data?.notifications ?? []).map((n: any, i: number) => (
-              <li key={i} className="flex items-center justify-between py-3 text-sm transition-colors hover:bg-[#D1A054]/5">
-                <div>
-                  <p className="font-medium">{n.subject ?? n.type}</p>
-                  <p className="text-xs text-gray-400">
-                    {n.recipientEmail || n.recipientPhone}
-                  </p>
-                </div>
-                <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs">
-                  {n.status}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  value={notifSearch}
+                  onChange={(e) => setNotifSearch(e.target.value)}
+                  placeholder="Search notifications..."
+                  className="w-full bg-transparent text-sm outline-none"
+                />
+              </div>
+              <select
+                value={notifType}
+                onChange={(e) => setNotifType(e.target.value)}
+                className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--zcanopy-primary)]"
+              >
+                <option value="all">All types</option>
+                {notifTypes.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              <select
+                value={notifChannel}
+                onChange={(e) => setNotifChannel(e.target.value)}
+                className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--zcanopy-primary)]"
+              >
+                <option value="all">All channels</option>
+                {notifChannels.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs uppercase text-gray-400">
+                  <tr>
+                    <th className="py-2 pr-4">Title</th>
+                    <th className="py-2 pr-4">Type</th>
+                    <th className="py-2 pr-4">Channel</th>
+                    <th className="py-2 pr-4">Recipient</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2">Sent At</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredNotifications.map((n: any) => (
+                    <tr key={n.id} className="transition-colors hover:bg-[#D1A054]/5">
+                      <td className="py-2 pr-4 font-medium">{n.title || n.type || "-"}</td>
+                      <td className="py-2 pr-4 text-gray-600">{n.type}</td>
+                      <td className="py-2 pr-4 text-gray-600">{n.channel}</td>
+                      <td className="py-2 pr-4 text-gray-600">{n.recipient || "-"}</td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium">
+                          {n.status}
+                        </span>
+                      </td>
+                      <td className="py-2 text-gray-500">
+                        {n.createdAt ? new Date(n.createdAt).toLocaleString() : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </Panel>
 

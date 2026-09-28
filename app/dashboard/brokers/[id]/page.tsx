@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { useAuth } from "@/components/AuthProvider";
@@ -19,6 +19,14 @@ const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; ma
   prop: { maxProperties: 5, maxPhotos: 15, maxVideos: 1, maxVideoSizeMB: 500 },
 };
 
+function parseSubscriptionTier(value: string | undefined | null): { tier: string; images: string[] } {
+  const raw = value || "";
+  const parts = raw.split(",").map((part) => part.trim()).filter(Boolean);
+  const tier = parts[0] || "prop";
+  const images = parts.slice(1);
+  return { tier, images };
+}
+
 function formatBytes(mb: number) {
   if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
   return `${mb} MB`;
@@ -35,6 +43,17 @@ export default function BrokerDetailPage({
     (token) => adminApi.brokerDetails(token, id),
     [id],
   );
+
+  useEffect(() => {
+    if (details.data) {
+      const raw = JSON.parse(JSON.stringify(details.data));
+      console.log('[BrokerDetailPage] raw details.data', raw);
+      const parsed = parseSubscriptionTier(raw.broker?.subscriptionTier);
+      console.log('[BrokerDetailPage] parsed tier', parsed.tier);
+      console.log('[BrokerDetailPage] parsed images', parsed.images);
+    }
+  }, [details.data]);
+
   const properties = useAdminData(
     (token) => adminApi.brokerProperties(token, id, 1, 10),
     [id],
@@ -48,12 +67,15 @@ export default function BrokerDetailPage({
   if (details.error) return <ErrorState message={details.error} />;
 
   const broker = details.data?.broker ?? {};
+  const parsedTier = parseSubscriptionTier(broker.subscriptionTier);
+  const frontImage = parsedTier.images[0] || undefined;
+  const backImage = parsedTier.images[1] || undefined;
   const wallet = details.data?.walletBalance ?? broker.walletBalance ?? 0;
   const txs = details.data?.transactions ?? [];
   const messages = details.data?.messages ?? [];
   const bookings = details.data?.bookings ?? [];
   const props = properties.data?.properties ?? [];
-  const limits = TIER_LIMITS[broker.subscriptionTier?.toLowerCase?.()] ?? TIER_LIMITS.prop;
+  const limits = TIER_LIMITS[parsedTier.tier.toLowerCase()] ?? TIER_LIMITS.prop;
 
   return (
     <div className="space-y-6">
@@ -87,7 +109,7 @@ export default function BrokerDetailPage({
                   color: COLORS.primary,
                 }}
               >
-                {broker.subscriptionTier || "prop"} tier
+                {parsedTier.tier || "prop"} tier
               </span>
             </div>
             <div className="mt-5 space-y-2.5 text-sm">
@@ -153,8 +175,8 @@ export default function BrokerDetailPage({
               ) : null}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <IdImage label="National ID — Front" src={broker.idFrontUrl} />
-              <IdImage label="National ID — Back" src={broker.idBackUrl} />
+              <IdImage label="National ID — Front" src={frontImage} />
+              <IdImage label="National ID — Back" src={backImage} />
             </div>
             <div className="mt-4 flex gap-3">
               <button

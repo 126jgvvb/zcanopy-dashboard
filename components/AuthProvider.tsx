@@ -19,6 +19,7 @@ export interface AdminProfile {
   email: string;
   role: string;
   token: string;
+  refreshToken?: string;
 }
 
 interface AuthContextValue {
@@ -30,6 +31,7 @@ interface AuthContextValue {
   bypass: () => void;
   logout: () => void;
   getToken: () => string | null;
+  refreshToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -65,23 +67,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
+      console.log('[AuthProvider] init raw', raw);
       if (raw) {
         const parsed = JSON.parse(raw) as AdminProfile;
+        console.log('[AuthProvider] init parsed', parsed);
         if (active) setAdmin(parsed);
       } else {
         const bypass = document.cookie
           .split("; ")
           .find((c) => c.startsWith("zcanopy_dev_bypass="));
+        console.log('[AuthProvider] bypass cookie', bypass);
         if (bypass) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(DEV_ADMIN));
           setTokenCookie(DEV_ADMIN.token);
           setAdmin(DEV_ADMIN);
         }
       }
-    } catch {
-      // ignore corrupt storage
+    } catch (err) {
+      console.log('[AuthProvider] init error', err);
     } finally {
-      if (active) setLoading(false);
+      console.log('[AuthProvider] init finally active', active);
+      if (active) {
+        console.log('[AuthProvider] init setLoading(false)');
+        setLoading(false);
+      }
     }
     return () => {
       active = false;
@@ -99,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: result.email,
       role: result.role,
       token: result.token,
+      refreshToken: result.refreshToken,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     setTokenCookie(profile.token);
@@ -143,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: result.email,
       role: result.role,
       token: result.token,
+      refreshToken: result.refreshToken,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     setTokenCookie(profile.token);
@@ -157,6 +168,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAdmin(null);
   }, []);
 
+  const refreshToken = useCallback(async () => {
+    const current = admin;
+    const refreshToken = current?.refreshToken;
+    if (!refreshToken) {
+      throw new ApiError("No refresh token available", 401);
+    }
+    const result = await adminApi.refresh(refreshToken);
+    if (!result?.token) {
+      throw new ApiError("Invalid refresh response", 401);
+    }
+    const profile: AdminProfile = {
+      id: current!.id,
+      username: current!.username,
+      email: current!.email,
+      role: current!.role,
+      token: result.token,
+      refreshToken: result.refreshToken ?? refreshToken,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+    setTokenCookie(profile.token);
+    setAdmin(profile);
+  }, [admin]);
+
   const bypass = useCallback(() => {
     document.cookie = `${COOKIE_NAME}=${DEV_ADMIN.token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
     document.cookie = "zcanopy_dev_bypass=1; path=/; max-age=86400; samesite=lax";
@@ -167,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const getToken = useCallback(() => admin?.token ?? null, [admin]);
 
   return (
-    <AuthContext.Provider value={{ admin, loading, login, googleLogin, devLogin, bypass, logout, getToken }}>
+    <AuthContext.Provider value={{ admin, loading, login, googleLogin, devLogin, bypass, logout, getToken, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );

@@ -9,7 +9,7 @@ import { COLORS } from "@/lib/theme";
 type Fetcher<T> = (token: string) => Promise<T>;
 
 export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
-  const { admin } = useAuth();
+  const { admin, refreshToken, loading: authLoading } = useAuth();
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,15 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
   });
 
   useEffect(() => {
-    if (!admin) return;
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
+    if (!admin) {
+      setLoading(false);
+      setError("Unauthorized");
+      return;
+    }
     let active = true;
     setLoading(true);
     setError(null);
@@ -28,9 +36,23 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
       .then((result) => {
         if (active) setData(result);
       })
-      .catch((err) => {
-        if (active)
-          setError(err instanceof ApiError ? err.message : "Failed to load data.");
+      .catch(async (err) => {
+        if (!active) return;
+        if (err instanceof ApiError && err.status === 401) {
+          try {
+            await refreshToken();
+          } catch (refreshErr) {
+            if (active) {
+              setError(
+                refreshErr instanceof ApiError
+                  ? refreshErr.message
+                  : "Session expired. Please log in again.",
+              );
+            }
+          }
+        } else {
+          if (active) setError(err instanceof ApiError ? err.message : "Failed to load data.");
+        }
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -39,7 +61,7 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [admin, ...deps]);
+  }, [admin, authLoading, refreshToken, ...deps]);
 
   function reload() {
     if (!admin) return;
@@ -47,9 +69,21 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
     setError(null);
     fetcherRef.current(admin.token)
       .then(setData)
-      .catch((err) =>
-        setError(err instanceof ApiError ? err.message : "Failed to load data."),
-      )
+      .catch(async (err) => {
+        if (err instanceof ApiError && err.status === 401) {
+          try {
+            await refreshToken();
+          } catch (refreshErr) {
+            setError(
+              refreshErr instanceof ApiError
+                ? refreshErr.message
+                : "Session expired. Please log in again.",
+            );
+          }
+        } else {
+          setError(err instanceof ApiError ? err.message : "Failed to load data.");
+        }
+      })
       .finally(() => setLoading(false));
   }
 

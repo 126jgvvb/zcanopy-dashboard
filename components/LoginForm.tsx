@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
 import { COLORS } from "@/lib/theme";
 import { ApiError } from "@/lib/api";
+import { Eye, EyeOff } from "lucide-react";
 
 const DEV_ACCOUNTS = [
   { label: "Super Admin", email: "superadmin@zcanopy.dev", password: "superadmin123", role: "super_admin" },
@@ -13,27 +14,39 @@ const DEV_ACCOUNTS = [
   { label: "Support", email: "support@zcanopy.dev", password: "support123", role: "support" },
 ];
 
+function formatLoginError(err: unknown): string {
+  if (err instanceof ApiError) {
+    const msg = err.message.trim();
+    if (!msg) return "Invalid email or password";
+    if (/Cannot POST|Cannot GET|Failed to fetch|NetworkError|net::ERR|fetch.*failed|Unable to connect/i.test(msg)) {
+      return "Unable to connect to the server. Please try again later.";
+    }
+    if (/not found|invalid credentials|invalid password|admin not found|bad request|unauthorized|401|403|400/i.test(msg)) {
+      return "Invalid email or password";
+    }
+    return msg;
+  }
+  return "Unable to sign in. Please check your credentials.";
+}
+
 export default function LoginForm({
   redirect,
 }: {
   redirect?: string;
 }) {
   const router = useRouter();
-  const { admin, login, googleLogin, devLogin, bypass, loading: authLoading } = useAuth();
+  const { login, googleLogin, devLogin, bypass, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [devBusy, setDevBusy] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!authLoading && admin) {
-      router.replace("/dashboard");
-    }
-  }, [admin, authLoading, router]);
+  const targetRedirect = redirect && redirect !== "/home" && redirect !== "/" ? redirect : "/dashboard";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,13 +54,9 @@ export default function LoginForm({
     setSubmitting(true);
     try {
       await login(email.trim(), password);
-      router.replace(redirect || "/dashboard");
+      router.replace(targetRedirect);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Unable to sign in. Please check your credentials.",
-      );
+      setError(formatLoginError(err));
     } finally {
       setSubmitting(false);
     }
@@ -58,13 +67,9 @@ export default function LoginForm({
     setDevBusy(devEmail);
     try {
       await devLogin(devEmail, devPassword);
-      router.replace(redirect || "/dashboard");
+      router.replace(targetRedirect);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Dev login failed.",
-      );
+      setError(formatLoginError(err));
     } finally {
       setDevBusy(null);
     }
@@ -72,7 +77,7 @@ export default function LoginForm({
 
   function handleBypass() {
     bypass();
-    router.replace(redirect || "/dashboard");
+    router.replace(targetRedirect);
   }
 
   useEffect(() => {
@@ -139,14 +144,24 @@ export default function LoginForm({
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--zcanopy-card-brown)]">
             Password
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2.5 outline-none"
-              placeholder="••••••••"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="flex-1 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2.5 outline-none"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="flex items-center justify-center rounded-lg border border-[var(--zcanopy-border)] bg-white px-3 py-2.5 text-gray-500 hover:text-gray-700"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </label>
 
           {error ? (
