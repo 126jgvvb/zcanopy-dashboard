@@ -14,6 +14,8 @@ const DEV_ACCOUNTS = [
   { label: "Support", email: "support@zcanopy.dev", password: "support123", role: "support" },
 ];
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000/api';
+
 function formatLoginError(err: unknown): string {
   if (err instanceof ApiError) {
     const msg = err.message.trim();
@@ -44,6 +46,13 @@ export default function LoginForm({
   const [submitting, setSubmitting] = useState(false);
   const [devBusy, setDevBusy] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordOtp, setForgotPasswordOtp] = useState("");
+  const [forgotPasswordNewPassword, setForgotPasswordNewPassword] = useState("");
+  const [forgotPasswordConfirmPassword, setForgotPasswordConfirmPassword] = useState("");
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<"email" | "otp" | "reset">("email");
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState<string | null>(null);
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
   const targetRedirect = redirect && redirect !== "/home" && redirect !== "/" ? redirect : "/dashboard";
@@ -78,6 +87,91 @@ export default function LoginForm({
   function handleBypass() {
     bypass();
     router.replace(targetRedirect);
+  }
+
+  async function handleForgotPasswordSendOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setForgotPasswordMessage(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/forgot-password/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotPasswordEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to send OTP');
+      }
+      setForgotPasswordMessage(data.message || 'OTP sent to your email.');
+      setForgotPasswordStep("otp");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send OTP');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleForgotPasswordVerifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setForgotPasswordMessage(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/forgot-password/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotPasswordEmail.trim(), otp: forgotPasswordOtp.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.valid) {
+        throw new Error(data.message || 'Invalid OTP');
+      }
+      setForgotPasswordMessage('OTP verified. Set your new password.');
+      setForgotPasswordStep("reset");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'OTP verification failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleForgotPasswordReset(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setForgotPasswordMessage(null);
+    if (forgotPasswordNewPassword !== forgotPasswordConfirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (forgotPasswordNewPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/forgot-password/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotPasswordEmail.trim(), password: forgotPasswordNewPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to reset password');
+      }
+      setForgotPasswordMessage('Password reset successfully. You can now sign in.');
+      setForgotPasswordMode(false);
+      setForgotPasswordStep("email");
+      setForgotPasswordEmail("");
+      setForgotPasswordOtp("");
+      setForgotPasswordNewPassword("");
+      setForgotPasswordConfirmPassword("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   useEffect(() => {
@@ -170,6 +264,16 @@ export default function LoginForm({
             </p>
           ) : null}
 
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => { setForgotPasswordMode(true); setError(null); setForgotPasswordMessage(null); setForgotPasswordStep("email"); }}
+              className="text-xs font-medium text-[var(--zcanopy-primary)] hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+
           <button
             type="submit"
             disabled={submitting}
@@ -191,6 +295,114 @@ export default function LoginForm({
           <div ref={googleButtonRef} className="mt-3 flex justify-center" />
           {googleLoading && <p className="text-center text-sm text-gray-500">Signing in with Google...</p>}
         </form>
+
+        {forgotPasswordMode && (
+          <div className="mt-6 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[var(--zcanopy-card-brown)]">Reset your password</h2>
+            {forgotPasswordStep === "email" && (
+              <form onSubmit={handleForgotPasswordSendOtp} className="space-y-4">
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--zcanopy-card-brown)]">
+                  Email
+                  <input
+                    type="email"
+                    required
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2.5 outline-none transition focus:border-[var(--zcanopy-primary)] focus:ring-2 focus:ring-[var(--zcanopy-primary)]/30"
+                    placeholder="admin@zcanopy.com"
+                  />
+                </label>
+                {error && <p className="text-sm text-red-600">{error}</p>}
+                {forgotPasswordMessage && <p className="text-sm text-green-600">{forgotPasswordMessage}</p>}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-[var(--zcanopy-primary)] px-4 py-2.5 font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-60"
+                >
+                  {submitting ? 'Sending OTP…' : 'Send OTP'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setForgotPasswordMode(false); setError(null); setForgotPasswordMessage(null); }}
+                  className="w-full text-sm font-medium text-[var(--zcanopy-muted)] hover:text-[var(--zcanopy-card-brown)]"
+                >
+                  Back to login
+                </button>
+              </form>
+            )}
+
+            {forgotPasswordStep === "otp" && (
+              <form onSubmit={handleForgotPasswordVerifyOtp} className="space-y-4">
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--zcanopy-card-brown)]">
+                  Enter OTP sent to {forgotPasswordEmail}
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={forgotPasswordOtp}
+                    onChange={(e) => setForgotPasswordOtp(e.target.value)}
+                    className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2.5 outline-none transition focus:border-[var(--zcanopy-primary)] focus:ring-2 focus:ring-[var(--zcanopy-primary)]/30"
+                    placeholder="123456"
+                  />
+                </label>
+                {error && <p className="text-sm text-red-600">{error}</p>}
+                {forgotPasswordMessage && <p className="text-sm text-green-600">{forgotPasswordMessage}</p>}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-[var(--zcanopy-primary)] px-4 py-2.5 font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-60"
+                >
+                  {submitting ? 'Verifying…' : 'Verify OTP'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setForgotPasswordStep("email"); setError(null); setForgotPasswordMessage(null); }}
+                  className="w-full text-sm font-medium text-[var(--zcanopy-muted)] hover:text-[var(--zcanopy-card-brown)]"
+                >
+                  Back
+                </button>
+              </form>
+            )}
+
+            {forgotPasswordStep === "reset" && (
+              <form onSubmit={handleForgotPasswordReset} className="space-y-4">
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--zcanopy-card-brown)]">
+                  New Password
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={forgotPasswordNewPassword}
+                    onChange={(e) => setForgotPasswordNewPassword(e.target.value)}
+                    className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2.5 outline-none transition focus:border-[var(--zcanopy-primary)] focus:ring-2 focus:ring-[var(--zcanopy-primary)]/30"
+                    placeholder="••••••••"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--zcanopy-card-brown)]">
+                  Confirm New Password
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={forgotPasswordConfirmPassword}
+                    onChange={(e) => setForgotPasswordConfirmPassword(e.target.value)}
+                    className="rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2.5 outline-none transition focus:border-[var(--zcanopy-primary)] focus:ring-2 focus:ring-[var(--zcanopy-primary)]/30"
+                    placeholder="••••••••"
+                  />
+                </label>
+                {error && <p className="text-sm text-red-600">{error}</p>}
+                {forgotPasswordMessage && <p className="text-sm text-green-600">{forgotPasswordMessage}</p>}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-[var(--zcanopy-primary)] px-4 py-2.5 font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-60"
+                >
+                  {submitting ? 'Resetting…' : 'Reset Password'}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
         <div className="mt-6">
           <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--zcanopy-muted)]">

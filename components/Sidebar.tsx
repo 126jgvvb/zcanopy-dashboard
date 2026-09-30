@@ -19,6 +19,7 @@ import {
   MessageSquare,
   History,
   Users,
+  Tag,
 } from "lucide-react";
 import { COLORS, can, type AdminCapability } from "@/lib/theme";
 
@@ -36,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/properties", label: "Properties", capability: "manage_brokers", icon: <Home className="h-4 w-4" /> },
   { href: "/dashboard/transactions", label: "Transactions", capability: "manage_finances", icon: <ArrowLeftRight className="h-4 w-4" /> },
   { href: "/dashboard/commissions", label: "Commissions", capability: "manage_finances", icon: <Percent className="h-4 w-4" /> },
+  { href: "/dashboard/tiers", label: "Tiers", capability: "manage_finances", icon: <Tag className="h-4 w-4" /> },
   { href: "/dashboard/wallet", label: "Wallet", capability: "manage_finances", icon: <Wallet className="h-4 w-4" /> },
   { href: "/dashboard/invoices", label: "Invoices", capability: "manage_finances", icon: <FileText className="h-4 w-4" /> },
   { href: "/dashboard/messages", label: "Messages", capability: "manage_messages", icon: <Mail className="h-4 w-4" /> },

@@ -402,6 +402,17 @@ export const adminApi = {
   verifyWithdrawalOtp: (token: string, payload: { email: string; otp: string }) =>
     apiFetch("/admin/withdraw/otp/verify", { method: "POST", token, body: payload, fallback: { success: true, message: "OTP verified successfully", valid: true } }),
 
+  tiers: (token: string) =>
+    apiFetch("/admin/tiers", { token, fallback: [{ tier: "fibrous", price: 25000 }, { tier: "buttress", price: 50000 }, { tier: "prop", price: 0 }] }),
+
+  updateTierPrice: (token: string, tier: string, price: number) =>
+    apiFetch(`/admin/tiers/${tier}`, {
+      method: "PUT",
+      token,
+      body: { price },
+      fallback: { success: true, message: "Tier price updated (mock)" },
+    }),
+
   logs: (token: string, page = 1, limit = 10, level?: string, service?: string) =>
     apiFetch("/admin/logs", {
       token,
@@ -464,9 +475,9 @@ export const adminApi = {
     idFrontUrl?: string;
     idBackUrl?: string;
   }) =>
-    apiFetch<{ brokerId: string; email: string; phoneNumber: string; brokerCode: string }>(
+    apiFetch<{ success: boolean; message: string; expiresInSeconds?: number }>(
       "/broker/register",
-      { method: "POST", body: payload, fallback: { brokerId: "brk-mock-1", email: payload.email, phoneNumber: payload.phoneNumber, brokerCode: payload.email } },
+      { method: "POST", body: payload, fallback: { success: true, message: "Account created (mock)" } },
     ),
 
   sendBrokerOtp: (email: string, phoneNumber: string) =>
@@ -478,6 +489,15 @@ export const adminApi = {
       body: { email, phoneNumber, emailCode, phoneCode },
       fallback: { success: true, message: "Verified (mock)" },
     }),
+
+  sendForgotPasswordOtp: (email: string) =>
+    apiFetch<{ success: boolean; message: string }>("/admin/forgot-password/otp/send", { method: "POST", body: { email }, fallback: { success: true, message: "OTP sent (mock)" } }),
+
+  verifyForgotPasswordOtp: (email: string, otp: string) =>
+    apiFetch<{ success: boolean; message: string; valid: boolean }>("/admin/forgot-password/otp/verify", { method: "POST", body: { email, otp }, fallback: { success: true, message: "OTP verified (mock)", valid: true } }),
+
+  resetPassword: (email: string, password: string) =>
+    apiFetch<{ success: boolean; message: string }>("/admin/forgot-password/reset", { method: "POST", body: { email, password }, fallback: { success: true, message: "Password reset (mock)" } }),
 
   featuredProperties: () =>
     apiFetch("/public/properties/featured", { fallback: mockData.featuredProperties() }),

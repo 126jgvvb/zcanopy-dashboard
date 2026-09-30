@@ -86,19 +86,23 @@ function BrokerVerifyPageInner() {
   }, [resendCountdown]);
 
   async function sendOtp() {
+    setError(null);
     try {
       const res = await adminApi.sendBrokerOtp(email, phone);
       if ((res as any).devCode) {
         setInfo(`Dev code: ${(res as any).devCode} (use for both email & phone)`);
       }
-      if ((res as any).success) {
-        setResendCountdown(60);
-      }
       if ((res as any).waitSeconds) {
         setResendCountdown((res as any).waitSeconds);
+        setInfo((res as any).message || "Codes were already sent. Codes remain valid for 5 minutes.");
+        return;
       }
-    } catch {
-      setError("Failed to send verification codes. Please retry.");
+      if ((res as any).success) {
+        setResendCountdown(60);
+        setInfo("New verification codes sent.");
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to send verification codes. Please retry.");
     }
   }
 
@@ -113,8 +117,9 @@ function BrokerVerifyPageInner() {
     setError(null);
     setSubmitting(true);
     try {
-      await adminApi.verifyBrokerOtp(email, phone, emailCode, phoneCode);
-      router.push(`/brokers/welcome?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`);
+      const res = await adminApi.verifyBrokerOtp(email, phone, emailCode, phoneCode);
+      const brokerCode = (res as { brokerCode?: string }).brokerCode || code;
+      router.push(`/brokers/welcome?email=${encodeURIComponent(email)}&code=${encodeURIComponent(brokerCode)}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Invalid code. Please try again.");
     } finally {

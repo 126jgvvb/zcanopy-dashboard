@@ -82,10 +82,12 @@ export default function BrokerSignupPage() {
         email: email.trim(),
         phoneNumber: phone.trim(),
       });
+      if (!(res as { success?: boolean }).success) {
+        setError((res as { message?: string }).message || "Could not create your account. Please try again.");
+        return;
+      }
       router.push(
-        `/brokers/verify?email=${encodeURIComponent(res.email)}&phone=${encodeURIComponent(
-          res.phoneNumber,
-        )}&code=${encodeURIComponent(res.brokerCode)}`,
+        `/brokers/verify?email=${encodeURIComponent(email.trim())}&phone=${encodeURIComponent(phone.trim())}`,
       );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create your account. Please try again.");
