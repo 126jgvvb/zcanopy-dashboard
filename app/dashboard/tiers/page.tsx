@@ -21,7 +21,8 @@ export default function TiersPage() {
 
   useEffect(() => {
     if (tiersQuery.data) {
-      setTiers(tiersQuery.data);
+      const tiers = Array.isArray(tiersQuery.data) ? tiersQuery.data : tiersQuery.data.tiers;
+      setTiers(tiers || []);
     }
   }, [tiersQuery.data]);
 

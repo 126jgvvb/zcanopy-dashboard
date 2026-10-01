@@ -53,6 +53,11 @@ export interface RequestOptions {
   fallback?: unknown;
 }
 
+export interface TierPrice {
+  tier: string;
+  price: number;
+}
+
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
   const url = new URL(`${API_BASE}${path}`);
@@ -403,7 +408,7 @@ export const adminApi = {
     apiFetch("/admin/withdraw/otp/verify", { method: "POST", token, body: payload, fallback: { success: true, message: "OTP verified successfully", valid: true } }),
 
   tiers: (token: string) =>
-    apiFetch("/admin/tiers", { token, fallback: [{ tier: "fibrous", price: 25000 }, { tier: "buttress", price: 50000 }, { tier: "prop", price: 0 }] }),
+    apiFetch<{ tiers: TierPrice[] }>("/admin/tiers", { token, fallback: { tiers: [{ tier: "fibrous", price: 25000 }, { tier: "buttress", price: 50000 }, { tier: "prop", price: 0 }] } }),
 
   updateTierPrice: (token: string, tier: string, price: number) =>
     apiFetch(`/admin/tiers/${tier}`, {
