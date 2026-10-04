@@ -39,6 +39,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --animate-letter-drop: letterDrop 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-progress-sweep: progressSweep 1.15s cubic-bezier(0.65, 0, 0.35, 1) infinite;
   --shadow-zcanopy-sm: var(--zcanopy-shadow-sm);
   --shadow-zcanopy-md: var(--zcanopy-shadow-md);
 }
@@ -230,6 +231,16 @@ tbody tr {
 
 .letter-drop {
   animation: var(--animate-letter-drop);
+}
+
+/* Indeterminate sweep for background work that has no measurable progress. */
+@keyframes progressSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }
 
 /* Thin, brand-tinted scrollbars where supported. */

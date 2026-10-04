@@ -8,7 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { adminApi } from "@/lib/api";
 import { COLORS } from "@/lib/theme";
 import PropertyCard from "@/components/PropertyCard";
-import { ArrowLeft, IdCard, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, Check, IdCard, LoaderCircle, ZoomIn, ZoomOut } from "lucide-react";
 
 const currency = (n: number) =>
   `UGX ${Number(n || 0).toLocaleString("en-UG")}`;
@@ -63,10 +63,36 @@ export default function BrokerDetailPage({
     [id],
   );
 
+  const [approving, setApproving] = useState(false);
+  const [approved, setApproved] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function handleApprove() {
+    if (approving || !admin) return;
+    setActionError(null);
+    setApproving(true);
+    try {
+      const result = await adminApi.approveDocument(admin.token, id, {
+        namesMatched: true,
+      });
+      if (result?.success === false) {
+        throw new Error(result?.message || "Approval was not accepted.");
+      }
+      setApproved(true);
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to approve documents.",
+      );
+    } finally {
+      setApproving(false);
+    }
+  }
+
   if (details.loading) return <LoadingState label="Loading broker" />;
   if (details.error) return <ErrorState message={details.error} />;
 
   const broker = details.data?.broker ?? {};
+  const isApproved = Boolean(broker.isVerified) || approved;
   const parsedTier = parseSubscriptionTier(broker.subscriptionTier);
   const frontImage = parsedTier.images[0] || undefined;
   const backImage = parsedTier.images[1] || undefined;
@@ -163,28 +189,62 @@ export default function BrokerDetailPage({
           </Panel>
 
           <Panel title="Identity Verification">
-            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                Names awaiting approval
-              </p>
-              <p className="mt-1 text-sm font-medium text-amber-900">
-                {broker.legalName || broker.username}
-              </p>
-              {broker.idNumber ? (
-                <p className="text-xs text-amber-700">ID No: {broker.idNumber}</p>
-              ) : null}
-            </div>
+            {isApproved ? (
+              <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 dark:border-green-500/30 dark:bg-green-950/40">
+                <p className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">
+                  Documents approved
+                </p>
+                <p className="mt-1 text-sm font-medium text-green-900 dark:text-green-100">
+                  {broker.legalName || broker.username}
+                </p>
+                {broker.idNumber ? (
+                  <p className="text-xs text-green-700 dark:text-green-300">
+                    ID No: {broker.idNumber}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                  Names awaiting approval
+                </p>
+                <p className="mt-1 text-sm font-medium text-amber-900">
+                  {broker.legalName || broker.username}
+                </p>
+                {broker.idNumber ? (
+                  <p className="text-xs text-amber-700">ID No: {broker.idNumber}</p>
+                ) : null}
+              </div>
+            )}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <IdImage label="National ID — Front" src={frontImage} />
               <IdImage label="National ID — Back" src={backImage} />
             </div>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-wrap gap-3">
               <button
-                onClick={() => adminApi.approveDocument(admin!.token, id, { namesMatched: true })}
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-90"
-                style={{ backgroundColor: COLORS.primary }}
+                type="button"
+                onClick={handleApprove}
+                disabled={isApproved || approving}
+                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow ${
+                  isApproved
+                    ? "cursor-default border border-green-200 bg-green-50 text-green-700 dark:border-green-500/30 dark:bg-green-950/40 dark:text-green-300"
+                    : "text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+                }`}
+                style={isApproved ? undefined : { backgroundColor: COLORS.primary }}
               >
-                Approve & Match Names
+                {isApproved ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Approved
+                  </>
+                ) : approving ? (
+                  <>
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    Approving…
+                  </>
+                ) : (
+                  "Approve & Match Names"
+                )}
               </button>
               <button
                 onClick={() => adminApi.approveDocument(admin!.token, id, { namesMatched: false })}
@@ -193,6 +253,23 @@ export default function BrokerDetailPage({
                 Reject
               </button>
             </div>
+            {approving && (
+              <div
+                className="mt-3 h-1 w-full overflow-hidden rounded-full bg-[var(--zcanopy-border)]"
+                role="progressbar"
+                aria-label="Approving documents"
+              >
+                <div
+                  className="h-full w-1/4 rounded-full animate-progress-sweep"
+                  style={{ backgroundColor: COLORS.primary }}
+                />
+              </div>
+            )}
+            {actionError ? (
+              <div className="mt-3">
+                <ErrorState message={actionError} />
+              </div>
+            ) : null}
           </Panel>
 
           <Panel title="Recent Transactions">
