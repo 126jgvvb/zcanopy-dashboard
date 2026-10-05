@@ -370,6 +370,14 @@ export const adminApi = {
       fallback: { success: true, message: freeze ? "Admin frozen (mock)" : "Admin unfrozen (mock)" },
     }),
 
+  updateAdminUsername: (token: string, adminId: string, username: string) =>
+    apiFetch(`/admin/admins/${adminId}/username`, {
+      method: "PUT",
+      token,
+      body: { username },
+      fallback: { success: true, message: "Username updated (mock)" },
+    }),
+
   generateInvitationCode: (
     token: string,
     payload: { role: string; expiryHours: number },

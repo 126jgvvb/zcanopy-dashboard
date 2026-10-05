@@ -19,6 +19,8 @@ export default function AdminsPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [status, setStatus] = useState<(typeof STATUSES)[number]>("all");
   const [search, setSearch] = useState("");
+  const [editingAdmin, setEditingAdmin] = useState<any | null>(null);
+  const [editUsername, setEditUsername] = useState("");
 
   const canManage = can(admin?.role, "manage_admins");
 
@@ -145,7 +147,7 @@ export default function AdminsPage() {
                       </span>
                     </td>
                     <td className="py-2.5">
-                      {canManage && a.role !== "super_admin" && a.id !== admin?.id ? (
+                      {canManage && a.id !== admin?.id ? (
                         <div className="flex flex-wrap gap-2">
                           <button
                             disabled={acting === `freeze-${a.id}`}
@@ -174,6 +176,16 @@ export default function AdminsPage() {
                           >
                             Delete
                           </button>
+                          <button
+                            disabled={acting === `edit-${a.id}`}
+                            onClick={() => {
+                              setEditingAdmin(a);
+                              setEditUsername(a.username || "");
+                            }}
+                            className="hover-gold rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700"
+                          >
+                            Edit
+                          </button>
                         </div>
                       ) : (
                         <span className="text-xs text-gray-300">—</span>
@@ -186,6 +198,52 @@ export default function AdminsPage() {
           </div>
         )}
       </Panel>
+
+      {editingAdmin ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--zcanopy-border)] bg-white p-6 shadow-lg">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[var(--zcanopy-card-brown)]">Edit Admin</h3>
+              <button
+                type="button"
+                onClick={() => setEditingAdmin(null)}
+                className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!editingAdmin) return;
+                run(`edit-${editingAdmin.id}`, () =>
+                  adminApi.updateAdminUsername(admin!.token, editingAdmin.id, editUsername),
+                );
+                setEditingAdmin(null);
+              }}
+              className="mt-4 space-y-3"
+            >
+              <label className="flex flex-col gap-1 text-sm">
+                Username
+                <input
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  className="rounded-xl border border-gray-300 bg-white px-3 py-2"
+                  required
+                />
+              </label>
+              {error ? <p className="text-sm text-red-600">{error}</p> : null}
+              <button
+                type="submit"
+                disabled={acting === `edit-${editingAdmin?.id}`}
+                className="rounded-xl bg-[var(--zcanopy-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              >
+                {acting === `edit-${editingAdmin?.id}` ? "Saving…" : "Save"}
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       {canManage ? <AddAdminForm onAdded={() => admins.reload()} /> : null}
     </div>
@@ -224,6 +282,7 @@ function InviteForm({ onGenerated }: { onGenerated: (msg: string) => void }) {
             onChange={(e) => setRole(e.target.value)}
             className="rounded-xl border border-gray-300 bg-white px-3 py-2"
           >
+            <option value="super_admin">Super Admin</option>
             <option value="admin">Admin</option>
             <option value="support">Support</option>
           </select>
@@ -319,6 +378,7 @@ function AddAdminForm({ onAdded }: { onAdded: () => void }) {
           onChange={(e) => setRole(e.target.value)}
           className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
         >
+          <option value="super_admin">Super Admin</option>
           <option value="admin">Admin</option>
           <option value="support">Support</option>
         </select>

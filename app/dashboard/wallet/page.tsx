@@ -42,7 +42,7 @@ export default function WalletPage() {
         amount: Number(amount),
         walletType: "platform_commission",
       });
-      setResult(res?.message ?? "OTP sent to your email.");
+      setResult(res?.message ?? "OTP sent to your configured email.");
       setOtpSent(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to send OTP.");
@@ -172,7 +172,7 @@ export default function WalletPage() {
             {otpSent && !verified && (
               <form onSubmit={handleVerifyOtp} className="space-y-3">
                 <label className="flex flex-col gap-1 text-sm font-medium">
-                  Enter OTP sent to {admin?.email}
+                  Enter the OTP sent to your configured email
                   <input
                     type="text"
                     required

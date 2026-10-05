@@ -8,12 +8,6 @@ import { COLORS } from "@/lib/theme";
 import { ApiError } from "@/lib/api";
 import { Eye, EyeOff } from "lucide-react";
 
-const DEV_ACCOUNTS = [
-  { label: "Super Admin", email: "superadmin@zcanopy.dev", password: "superadmin123", role: "super_admin" },
-  { label: "Admin", email: "admin@zcanopy.dev", password: "admin123", role: "admin" },
-  { label: "Support", email: "support@zcanopy.dev", password: "support123", role: "support" },
-];
-
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000/api';
 
 function formatLoginError(err: unknown): string {
@@ -37,14 +31,13 @@ export default function LoginForm({
   redirect?: string;
 }) {
   const router = useRouter();
-  const { login, googleLogin, devLogin, bypass, loading: authLoading } = useAuth();
+  const { login, googleLogin, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [devBusy, setDevBusy] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
@@ -69,24 +62,6 @@ export default function LoginForm({
     } finally {
       setSubmitting(false);
     }
-  }
-
-  async function handleDevLogin(devEmail: string, devPassword: string) {
-    setError(null);
-    setDevBusy(devEmail);
-    try {
-      await devLogin(devEmail, devPassword);
-      router.replace(targetRedirect);
-    } catch (err) {
-      setError(formatLoginError(err));
-    } finally {
-      setDevBusy(null);
-    }
-  }
-
-  function handleBypass() {
-    bypass();
-    router.replace(targetRedirect);
   }
 
   async function handleForgotPasswordSendOtp(e: React.FormEvent) {
@@ -131,7 +106,7 @@ export default function LoginForm({
       setForgotPasswordMessage('OTP verified. Set your new password.');
       setForgotPasswordStep("reset");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'OTP verification failed');
+      setError(err instanceof Error ? err.message : 'Failed to verify OTP');
     } finally {
       setSubmitting(false);
     }
@@ -203,7 +178,7 @@ export default function LoginForm({
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
-        <ZLoadingIndicator size={72} color={COLORS.primary} />
+        <ZLoadingIndicator size={72} color={COLORS.primary} label="Loading console" />
       </div>
     );
   }
@@ -267,7 +242,7 @@ export default function LoginForm({
           <div className="flex items-center justify-between">
             <button
               type="button"
-              onClick={() => { setForgotPasswordMode(true); setError(null); setForgotPasswordMessage(null); setForgotPasswordStep("email"); }}
+              onClick={() => { setForgotPasswordMode(true); setError(null); setForgotPasswordMessage(null); }}
               className="text-xs font-medium text-[var(--zcanopy-primary)] hover:underline"
             >
               Forgot password?
@@ -403,41 +378,6 @@ export default function LoginForm({
             )}
           </div>
         )}
-
-        <div className="mt-6">
-          <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--zcanopy-muted)]">
-            Dev quick-login
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {DEV_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.email}
-                onClick={() => handleDevLogin(acc.email, acc.password)}
-                disabled={devBusy !== null}
-                className="rounded-xl border border-[var(--zcanopy-border)] px-2 py-2.5 text-xs font-medium transition-colors hover:border-[var(--zcanopy-primary)] hover:text-[var(--zcanopy-primary)] disabled:opacity-50"
-              >
-                {devBusy === acc.email ? (
-                  <ZLoadingIndicator size={14} color={COLORS.primary} strokeWidth={2} />
-                ) : (
-                  <>
-                    <span className="block font-semibold">{acc.label}</span>
-                    <span className="block text-[10px] normal-case opacity-70">{acc.role}</span>
-                  </>
-                )}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={handleBypass}
-            className="mt-3 w-full rounded-xl border-2 border-dashed border-[var(--zcanopy-border)] px-4 py-2.5 text-sm font-semibold text-[var(--zcanopy-muted)] transition-colors hover:border-[var(--zcanopy-primary)] hover:text-[var(--zcanopy-primary)]"
-          >
-            Bypass login entirely (dev)
-          </button>
-          <p className="mt-2 text-center text-[10px] text-gray-400">
-            For development only. Remove before production.
-          </p>
-        </div>
       </div>
     </div>
   );
