@@ -26,10 +26,7 @@ export default function CustomersPage() {
   );
 
   const filteredCustomers = (allCustomers.data?.customers ?? []).filter((c: any) => {
-    const updatedAt = new Date(c.updatedAt);
-    const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - 1);
-    const computedActive = updatedAt > cutoff;
+    const computedActive = Boolean(c.isActive);
     if (filter !== "all") {
       const matchStatus = filter === "active" ? computedActive : !computedActive;
       if (!matchStatus) return false;
@@ -143,10 +140,7 @@ function CustomerTable({
         </thead>
         <tbody className="divide-y divide-gray-100">
           {rows.map((c) => {
-            const updatedAt = new Date(c.updatedAt);
-            const cutoff = new Date();
-            cutoff.setMonth(cutoff.getMonth() - 1);
-            const computedActive = updatedAt > cutoff;
+            const computedActive = Boolean(c.isActive);
 
             return (
               <tr key={c.id} className="group transition-colors hover:bg-[#D1A054]/5">

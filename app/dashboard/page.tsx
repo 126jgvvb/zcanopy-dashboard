@@ -169,7 +169,7 @@ export default function OverviewPage() {
   const comments = useAdminData((token) => adminApi.comments(token, 1, 5), [liveTick]);
 
   useEffect(() => {
-    const interval = setInterval(() => setLiveTick((t) => t + 1), 30000);
+    const interval = setInterval(() => setLiveTick((t) => t + 1), 180000);
     return () => clearInterval(interval);
   }, []);
 

@@ -26,7 +26,7 @@ export default function PropertiesPage() {
   const [availability, setAvailability] = useState<(typeof AVAILABILITY)[number]>("all");
 
   useEffect(() => {
-    const interval = setInterval(() => setLiveTick((t) => t + 1), 30000);
+    const interval = setInterval(() => setLiveTick((t) => t + 1), 180000);
     return () => clearInterval(interval);
   }, []);
 

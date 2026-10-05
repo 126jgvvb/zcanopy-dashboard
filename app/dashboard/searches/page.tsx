@@ -7,12 +7,19 @@ import { adminApi } from "@/lib/api";
 
 const QUERY_PRESENCE = ["all", "with_query", "no_query"] as const;
 
+// admin.service.ts caps the searches limit at 10, so the page size must match
+// what the backend actually returns or the pager would mis-count.
+const PAGE_SIZE = 10;
+
 export default function SearchesPage() {
   const [customerId, setCustomerId] = useState("");
   const [query, setQuery] = useState("");
   const [queryPresence, setQueryPresence] = useState<(typeof QUERY_PRESENCE)[number]>("all");
-  const searches = useAdminData((token) =>
-    adminApi.searches(token, 1, 20, customerId || undefined, query || undefined),
+  const [page, setPage] = useState(1);
+  const searches = useAdminData(
+    (token) =>
+      adminApi.searches(token, page, PAGE_SIZE, customerId || undefined, query || undefined),
+    [page, customerId, query],
   );
 
   const data = searches.data as { searches?: any[]; total?: number } | undefined;
@@ -22,6 +29,10 @@ export default function SearchesPage() {
     if (queryPresence === "no_query" && s.query) return false;
     return true;
   });
+
+  // queryPresence filters client-side, so it must not affect the page count.
+  const total = data?.total ?? 0;
+  const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="space-y-6">
@@ -40,7 +51,10 @@ export default function SearchesPage() {
             <label className="block text-xs font-medium text-gray-500">Customer ID</label>
             <input
               value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
+              onChange={(e) => {
+                setCustomerId(e.target.value);
+                setPage(1);
+              }}
               placeholder="Optional customer ID filter"
               className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--zcanopy-surface)] px-4 py-2.5 text-sm outline-none"
             />
@@ -49,7 +63,10 @@ export default function SearchesPage() {
             <label className="block text-xs font-medium text-gray-500">Search Query</label>
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
               placeholder="Optional query filter"
               className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--zcanopy-surface)] px-4 py-2.5 text-sm outline-none"
             />
@@ -76,7 +93,7 @@ export default function SearchesPage() {
         </div>
       </Panel>
 
-      <Panel title={`All Searches (${filtered.length})`}>
+      <Panel title={`Searches (${filtered.length} on this page)`}>
         {searches.loading ? (
           <LoadingState label="Loading searches" />
         ) : searches.error ? (
@@ -118,6 +135,29 @@ export default function SearchesPage() {
           </div>
         )}
       </Panel>
+
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <button
+          disabled={page <= 1 || searches.loading}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="px-3 py-2 text-sm text-gray-500">
+          Page {page} of {lastPage}
+        </span>
+        <button
+          disabled={page >= lastPage || searches.loading}
+          onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+          className="hover-gold rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:opacity-50"
+        >
+          Next
+        </button>
+        <span className="px-3 py-2 text-sm text-gray-400">
+          {total} search{total === 1 ? "" : "es"}
+        </span>
+      </div>
     </div>
   );
 }

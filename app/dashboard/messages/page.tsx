@@ -22,15 +22,32 @@ export default function MessagesPage() {
   const [notifSearch, setNotifSearch] = useState("");
   const [notifType, setNotifType] = useState("all");
   const [notifChannel, setNotifChannel] = useState("all");
+  const [supportSearch, setSupportSearch] = useState("");
+  const [selectedSupportMessage, setSelectedSupportMessage] = useState<any | null>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => setLiveTick((t) => t + 1), 15000);
+    const interval = setInterval(() => setLiveTick((t) => t + 1), 180000);
     return () => clearInterval(interval);
   }, []);
 
   const system = useAdminData((token) => adminApi.systemMessages(token, 1, 15), [liveTick]);
   const comments = useAdminData((token) => adminApi.comments(token, 1, 15), [liveTick]);
   const notifications = useAdminData((token) => adminApi.notifications(token, { limit: 15 }), [liveTick]);
+  // Inbound support emails recorded by the notification service. Previously this
+  // panel showed property reviews instead, so support messages were never listed.
+  const clientMessages = useAdminData((token) => adminApi.clientMessages(token, 1, 15), [liveTick]);
+
+  const supportMessages = (
+    (clientMessages.data as { messages?: any[] } | undefined)?.messages ?? []
+  ).filter((m: any) => {
+    const q = supportSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      String(m.customerEmail ?? "").toLowerCase().includes(q) ||
+      String(m.subject ?? "").toLowerCase().includes(q) ||
+      String(m.textContent ?? "").toLowerCase().includes(q)
+    );
+  });
 
   useEffect(() => {
     setLoadingRecipients(true);
@@ -142,11 +159,129 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      <Panel title={`Client Messages (${filteredComments.length})`}>
+      <Panel title={`Support Messages (${supportMessages.length})`}>
+        {clientMessages.loading ? (
+          <LoadingState />
+        ) : clientMessages.error ? (
+          <ErrorState message={clientMessages.error} />
+        ) : supportMessages.length === 0 ? (
+          <p className="py-6 text-center text-sm text-gray-400">No support messages.</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 rounded-xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] px-3 py-2">
+              <Search className="h-4 w-4 text-gray-400" />
+              <input
+                value={supportSearch}
+                onChange={(e) => setSupportSearch(e.target.value)}
+                placeholder="Search by sender, subject or body..."
+                className="w-full bg-transparent text-sm outline-none"
+              />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs uppercase text-gray-400">
+                  <tr>
+                    <th className="py-2 pr-4">From</th>
+                    <th className="py-2 pr-4">Subject</th>
+                    <th className="py-2 pr-4">Message</th>
+                    <th className="py-2 pr-4">Inbox</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2">Received</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {supportMessages.map((m: any) => (
+                    <tr
+                      key={m.id}
+                      className="cursor-pointer align-top transition-colors hover:bg-[#D1A054]/5"
+                      onClick={() => setSelectedSupportMessage(m)}
+                    >
+                      <td className="py-2 pr-4 font-medium">{m.customerEmail || "-"}</td>
+                      <td className="py-2 pr-4 text-gray-700">{m.subject || "-"}</td>
+                      <td className="max-w-md py-2 pr-4 text-gray-600">
+                        <p className="whitespace-pre-wrap break-words">
+                          {m.textContent || m.htmlContent || "-"}
+                        </p>
+                      </td>
+                       <td className="py-2 pr-4 text-gray-500">{m.recipientInbox || "-"}</td>
+                       <td className="py-2 pr-4">
+                         <span
+                           className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                             m.status === "new"
+                               ? "bg-[var(--zcanopy-accent-gold)]/20 text-[var(--zcanopy-primary)]"
+                               : "bg-gray-100 text-gray-600"
+                           }`}
+                         >
+                           {m.status || "new"}
+                         </span>
+                       </td>
+                       <td className="py-2 text-gray-500">
+                         {m.receivedAt ? new Date(m.receivedAt).toLocaleString() : "-"}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+             {selectedSupportMessage ? (
+               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                 <div className="w-full max-w-2xl rounded-2xl border border-[var(--zcanopy-border)] bg-white p-6 shadow-lg">
+                   <div className="flex items-center justify-between">
+                     <h3 className="text-lg font-semibold text-[var(--zcanopy-card-brown)]">Support Message</h3>
+                     <button
+                       type="button"
+                       onClick={() => setSelectedSupportMessage(null)}
+                       className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                     >
+                       Close
+                     </button>
+                   </div>
+                   <div className="mt-4 space-y-3 text-sm text-gray-700">
+                     <div>
+                       <p className="text-xs uppercase tracking-wide text-gray-500">From</p>
+                       <p className="mt-1 font-medium">{selectedSupportMessage.customerEmail || "-"}</p>
+                     </div>
+                     <div>
+                       <p className="text-xs uppercase tracking-wide text-gray-500">Subject</p>
+                       <p className="mt-1 font-medium">{selectedSupportMessage.subject || "-"}</p>
+                     </div>
+                     <div>
+                       <p className="text-xs uppercase tracking-wide text-gray-500">Text Content</p>
+                       <p className="mt-1 whitespace-pre-wrap break-words">{selectedSupportMessage.textContent || "-"}</p>
+                     </div>
+                     <div>
+                       <p className="text-xs uppercase tracking-wide text-gray-500">HTML Content</p>
+                       <p className="mt-1 whitespace-pre-wrap break-words">{selectedSupportMessage.htmlContent || "-"}</p>
+                     </div>
+                     <div>
+                       <p className="text-xs uppercase tracking-wide text-gray-500">Recipient Inbox</p>
+                       <p className="mt-1 font-medium">{selectedSupportMessage.recipientInbox || "-"}</p>
+                     </div>
+                     <div className="flex items-center gap-4">
+                       <div>
+                         <p className="text-xs uppercase tracking-wide text-gray-500">Status</p>
+                         <p className="mt-1 font-medium">{selectedSupportMessage.status || "-"}</p>
+                       </div>
+                       <div>
+                         <p className="text-xs uppercase tracking-wide text-gray-500">Received At</p>
+                         <p className="mt-1 font-medium">
+                           {selectedSupportMessage.receivedAt ? new Date(selectedSupportMessage.receivedAt).toLocaleString() : "-"}
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             ) : null}
+           </div>
+         )}
+       </Panel>
+
+      <Panel title={`Property Reviews (${filteredComments.length})`}>
         {comments.loading ? (
           <LoadingState />
         ) : filteredComments.length === 0 ? (
-          <p className="py-6 text-center text-sm text-gray-400">No client messages.</p>
+          <p className="py-6 text-center text-sm text-gray-400">No property reviews.</p>
         ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
