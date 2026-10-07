@@ -43,7 +43,7 @@ const InputField = ({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--zcanopy-surface)] px-4 py-2.5 text-sm outline-none"
+      className="mt-1 w-full rounded-xl border-[0.5px] border-[var(--border)] bg-[var(--zcanopy-surface)] px-4 py-2.5 text-sm outline-none"
     />
   </div>
 );
@@ -155,7 +155,7 @@ export default function SearchFilters({ filters, onChange, onReset }: SearchFilt
         <div className="flex-1 min-w-[160px] flex items-end">
           <button
             onClick={onReset}
-            className="w-full rounded-xl border border-[var(--zcanopy-primary)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--zcanopy-primary)] hover:bg-[var(--zcanopy-primary)] hover:text-white transition-colors"
+            className="w-full rounded-xl border-[0.5px] border-[var(--zcanopy-primary)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--zcanopy-primary)] hover:bg-[var(--zcanopy-primary)] hover:text-white transition-colors"
           >
             Reset
           </button>

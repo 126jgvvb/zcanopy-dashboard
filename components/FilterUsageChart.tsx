@@ -37,14 +37,14 @@ function ChartBar({ label, value, maxValue, color }: ChartBarProps) {
   const height = Math.max(4, (value / maxValue) * 100);
   return (
     <div className="flex flex-col items-center flex-1 min-w-[60px] h-full">
-      <div className="relative w-full h-64">
+      <div className="relative w-full h-44">
         <div
           className="w-full rounded-t-lg transition-all duration-500 ease-out hover:brightness-110"
           style={{
             height: `${height}%`,
             minHeight: "16px",
             backgroundColor: color,
-            maxHeight: "256px",
+            maxHeight: "180px",
           }}
         ></div>
         <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-semibold text-gray-700">
@@ -121,7 +121,7 @@ export default function FilterUsageChart({ searches, dateRange }: FilterUsageCha
 
     return (
       <div key={day} className="flex flex-col items-center flex-1 min-w-[70px] h-full">
-        <div className="relative w-full flex flex-col-reverse gap-0.5 h-64">
+        <div className="relative w-full flex flex-col-reverse gap-0.5 h-44">
           {entries.map(([key, val], j) => {
             const color = CHART_COLORS[j % CHART_COLORS.length];
             const height = Math.max(2, (val / Math.max(...entries.map(([,v]) => v), 1)) * 100);
@@ -158,7 +158,7 @@ export default function FilterUsageChart({ searches, dateRange }: FilterUsageCha
             <span>Most used</span>
           </div>
         </div>
-        <div className="flex items-end items-end justify-between gap-3 h-80">
+        <div className="flex items-end justify-between gap-3 h-56">
           {sortedCounts.length === 0 ? (
             <p className="text-center text-sm text-gray-400 w-full">No filter usage data yet.</p>
           ) : (
@@ -180,7 +180,7 @@ export default function FilterUsageChart({ searches, dateRange }: FilterUsageCha
         {stats.sortedDaily.length === 0 ? (
           <p className="py-8 text-center text-sm text-gray-400">No search data available.</p>
         ) : (
-          <div className="flex items-end justify-between gap-3 h-80">
+          <div className="flex items-end justify-between gap-3 h-56">
             {dailyEntries}
           </div>
         )}
