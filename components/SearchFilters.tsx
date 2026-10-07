@@ -135,7 +135,7 @@ export default function SearchFilters({ filters, onChange, onReset }: SearchFilt
             <button
               key={qp}
               onClick={() => updateField("queryPresence", qp)}
-              className={`rounded-full px-4 py-2 text-sm font-medium capitalize transition-all ${
+              className={`rounded-none px-4 py-2 text-sm font-medium capitalize transition-all ${
                 (filters.queryPresence || "all") === qp
                   ? "text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-gray-100"
