@@ -7,9 +7,7 @@ import { adminApi } from "@/lib/api";
 
 const QUERY_PRESENCE = ["all", "with_query", "no_query"] as const;
 
-// admin.service.ts caps the searches limit at 10, so the page size must match
-// what the backend actually returns or the pager would mis-count.
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export default function SearchesPage() {
   const [customerId, setCustomerId] = useState("");
@@ -18,7 +16,10 @@ export default function SearchesPage() {
   const [page, setPage] = useState(1);
   const searches = useAdminData(
     (token) =>
-      adminApi.searches(token, page, PAGE_SIZE, customerId || undefined, query || undefined),
+      adminApi.searches(token, page, PAGE_SIZE, {
+        customerId: customerId || undefined,
+        query: query || undefined,
+      }),
     [page, customerId, query],
   );
 
@@ -33,6 +34,24 @@ export default function SearchesPage() {
   // queryPresence filters client-side, so it must not affect the page count.
   const total = data?.total ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const formatFilters = (filters: any) => {
+    if (!filters || typeof filters === "string") {
+      try {
+        const parsed = filters ? JSON.parse(filters) : {};
+        return Object.entries(parsed)
+          .filter(([_, v]) => v !== undefined && v !== "" && v !== null)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ");
+      } catch {
+        return "";
+      }
+    }
+    return Object.entries(filters)
+      .filter(([_, v]) => v !== undefined && v !== "" && v !== null)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(", ");
+  };
 
   return (
     <div className="space-y-6">
@@ -106,12 +125,16 @@ export default function SearchesPage() {
               <thead className="text-xs uppercase text-gray-400">
                 <tr>
                   <th className="py-2 pr-4">ID</th>
-                   <th className="py-2 pr-4">Customer ID</th>
+                  <th className="py-2 pr-4">Customer ID</th>
                   <th className="py-2 pr-4">Query</th>
                   <th className="py-2 pr-4">Location</th>
                   <th className="py-2 pr-4">Type</th>
-                  <th className="py-2 pr-4">Results</th>
-                  <th className="py-2 pr-4">Radius</th>
+                  <th className="py-2 pr-4">Radius (km)</th>
+                  <th className="py-2 pr-4">Price Range</th>
+                  <th className="py-2 pr-4">County / District</th>
+                  <th className="py-2 pr-4">Filters</th>
+                  <th className="py-2 pr-4">Result Count</th>
+                  <th className="py-2 pr-4">Result Property IDs</th>
                   <th className="py-2">Created At</th>
                 </tr>
               </thead>
@@ -123,8 +146,22 @@ export default function SearchesPage() {
                     <td className="py-2.5 pr-4">{s.query || "—"}</td>
                     <td className="py-2.5 pr-4 text-gray-500">{s.location || "—"}</td>
                     <td className="py-2.5 pr-4">{s.propertyType || "—"}</td>
-                    <td className="py-2.5 pr-4">{s.resultCount ?? 0}</td>
                     <td className="py-2.5 pr-4">{s.radius ? `${s.radius} km` : "—"}</td>
+                    <td className="py-2.5 pr-4">
+                      {s.minPrice || s.maxPrice ? `${s.minPrice || 0} — ${s.maxPrice || 0}` : "—"}
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      {s.subCounty || s.district ? `${s.subCounty || ""} / ${s.district || ""}` : "—"}
+                    </td>
+                    <td className="py-2.5 pr-4 text-xs text-gray-500">
+                      {formatFilters(s.filters) || "—"}
+                    </td>
+                    <td className="py-2.5 pr-4">{s.resultCount ?? 0}</td>
+                    <td className="py-2.5 pr-4 font-mono text-xs">
+                      {Array.isArray(s.resultPropertyIds) && s.resultPropertyIds.length > 0
+                        ? s.resultPropertyIds.slice(0, 5).join(", ") + (s.resultPropertyIds.length > 5 ? ` +${s.resultPropertyIds.length - 5} more` : "")
+                        : "—"}
+                    </td>
                     <td className="py-2.5 text-gray-500">
                       {s.createdAt ? new Date(s.createdAt).toLocaleString() : "—"}
                     </td>

@@ -436,12 +436,54 @@ export const adminApi = {
   activeSessions: (token: string) =>
     apiFetch("/admin/customers/active-sessions", { token, fallback: mockData.activeSessions() }),
 
-  searches: (token: string, page = 1, limit = 20, customerId?: string, query?: string) =>
+  searches: (
+    token: string,
+    page = 1,
+    limit = 20,
+    filters: {
+      customerId?: string;
+      query?: string;
+      propertyType?: string;
+      location?: string;
+      brokerCode?: string;
+      brokerBrandName?: string;
+      subCounty?: string;
+      district?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      fromDate?: string;
+      toDate?: string;
+      lat?: number;
+      lng?: number;
+      radiusKm?: number;
+    } = {},
+  ) =>
     apiFetch("/admin/searches", {
       token,
-      query: { page, limit, customerId: customerId ?? "", query: query ?? "" },
-      fallback: mockData.searches(page, limit, customerId, query),
+      query: {
+        page,
+        limit,
+        customerId: filters.customerId ?? "",
+        query: filters.query ?? "",
+        propertyType: filters.propertyType ?? "",
+        location: filters.location ?? "",
+        brokerCode: filters.brokerCode ?? "",
+        brokerBrandName: filters.brokerBrandName ?? "",
+        subCounty: filters.subCounty ?? "",
+        district: filters.district ?? "",
+        minPrice: filters.minPrice ?? 0,
+        maxPrice: filters.maxPrice ?? 0,
+        fromDate: filters.fromDate ?? "",
+        toDate: filters.toDate ?? "",
+        lat: filters.lat ?? 0,
+        lng: filters.lng ?? 0,
+        radiusKm: filters.radiusKm ?? 0,
+      },
+      fallback: mockData.searches(page, limit, filters),
     }),
+
+  searchById: (token: string, id: string) =>
+    apiFetch(`/admin/searches/${id}`, { token }),
 
   customers: (token: string, page = 1, limit = 10, isActive?: boolean, search?: string) =>
     apiFetch("/admin/customers", {

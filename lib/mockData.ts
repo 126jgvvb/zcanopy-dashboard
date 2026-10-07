@@ -228,16 +228,28 @@ export const mockData = {
     const start = (page - 1) * limit;
     return { comments: filtered.slice(start, start + limit), total: filtered.length };
   },
-  searches: (page = 1, limit = 20, sessionToken?: string, query?: string) => {
+  searches: (page = 1, limit = 20, filters: Record<string, any> = {}) => {
     const all = [
-      { id: "s1", sessionId: "sess-1", sessionToken: "tok-1", query: "2BR apartment in Kampala", location: "Kampala", radius: 5, propertyType: "apartment", filters: { maxPrice: 1000000 }, resultCount: 12, createdAt: "2026-09-10T08:00:00Z" },
-      { id: "s2", sessionId: "sess-2", sessionToken: "tok-2", query: "Villa in Muyenga", location: "Muyenga", radius: 10, propertyType: "villa", filters: {}, resultCount: 4, createdAt: "2026-09-10T07:30:00Z" },
-      { id: "s3", sessionId: "sess-1", sessionToken: "tok-1", query: "Land plot in Kira", location: "Kira", radius: 15, propertyType: "land", filters: { minPrice: 5000000 }, resultCount: 2, createdAt: "2026-09-09T18:20:00Z" },
+      { id: "s1", customerId: "cust-1", query: "2BR apartment in Kampala", location: "Kampala", radius: 5, propertyType: "apartment", filters: { maxPrice: 1000000, radiusKm: 5 }, resultCount: 12, resultPropertyIds: ["p1", "p2", "p3"], minPrice: 0, maxPrice: 1000000, subCounty: "Kampala", district: "Kampala", createdAt: "2026-09-10T08:00:00Z" },
+      { id: "s2", customerId: "cust-2", query: "Villa in Muyenga", location: "Muyenga", radius: 10, propertyType: "villa", filters: { radiusKm: 10 }, resultCount: 4, resultPropertyIds: ["p4", "p5"], minPrice: 0, maxPrice: 0, subCounty: "Makindye", district: "Kampala", createdAt: "2026-09-10T07:30:00Z" },
+      { id: "s3", customerId: "cust-1", query: "Land plot in Kira", location: "Kira", radius: 15, propertyType: "land", filters: { minPrice: 5000000, radiusKm: 15 }, resultCount: 2, resultPropertyIds: ["p6"], minPrice: 5000000, maxPrice: 0, subCounty: "Wakiso", district: "Wakiso", createdAt: "2026-09-09T18:20:00Z" },
     ];
-    const filtered = sessionToken ? all.filter((s) => s.sessionToken === sessionToken) : all;
-    const queryFiltered = query ? filtered.filter((s) => s.query.toLowerCase().includes(query.toLowerCase())) : filtered;
+    const filtered = Object.entries(filters).filter(([_, v]) => v !== undefined && v !== "" && v !== 0).reduce(
+      (acc, [key, value]) => {
+        if (key === "customerId") return acc.filter((s: any) => s.customerId === value);
+        if (key === "query") return acc.filter((s: any) => s.query?.toLowerCase().includes(String(value).toLowerCase()));
+        if (key === "propertyType") return acc.filter((s: any) => s.propertyType === value);
+        if (key === "location") return acc.filter((s: any) => s.location?.toLowerCase().includes(String(value).toLowerCase()));
+        if (key === "subCounty") return acc.filter((s: any) => s.subCounty?.toLowerCase().includes(String(value).toLowerCase()));
+        if (key === "district") return acc.filter((s: any) => s.district?.toLowerCase().includes(String(value).toLowerCase()));
+        if (key === "minPrice") return acc.filter((s: any) => s.minPrice >= Number(value));
+        if (key === "maxPrice") return acc.filter((s: any) => s.maxPrice <= Number(value) && s.maxPrice > 0);
+        return acc;
+      },
+      all as any[],
+    );
     const start = (page - 1) * limit;
-    return { searches: queryFiltered.slice(start, start + limit), total: queryFiltered.length };
+    return { searches: filtered.slice(start, start + limit), total: filtered.length };
   },
   customers: (page = 1, limit = 10, isActive?: boolean, search?: string) => {
     let filtered = MOCK_CUSTOMERS;
