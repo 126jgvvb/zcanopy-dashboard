@@ -167,6 +167,8 @@ export default function OverviewPage() {
   const messages = useAdminData((token) => adminApi.systemMessages(token, 1, 5), [liveTick]);
   const notifications = useAdminData((token) => adminApi.notifications(token, { limit: 5 }), [liveTick]);
   const comments = useAdminData((token) => adminApi.comments(token, 1, 5), [liveTick]);
+  const totalCustomers = useAdminData((token) => adminApi.customers(token, 1, 1), [liveTick]);
+  const totalBrokers = useAdminData((token) => adminApi.brokers(token, 1, 1), [liveTick]);
 
   useEffect(() => {
     const interval = setInterval(() => setLiveTick((t) => t + 1), 180000);
@@ -189,7 +191,7 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard label="Total Earnings" value={currency(c.totalEarnings)} hint="Platform + booking" />
         <StatCard label="Platform Commission" value={currency(c.platformCommission)} />
         <StatCard label="Booking Commission" value={currency(c.bookingCommission)} />
@@ -198,6 +200,8 @@ export default function OverviewPage() {
           value={(pending.data?.brokers?.length ?? 0) + (pending.data?.total ?? 0 > 0 ? 0 : 0)}
           hint={`${pending.data?.total ?? 0} awaiting review`}
         />
+        <StatCard label="Total Customers" value={totalCustomers.data?.total ?? 0} />
+        <StatCard label="Total Brokers" value={totalBrokers.data?.total ?? 0} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

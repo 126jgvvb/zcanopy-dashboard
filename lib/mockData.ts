@@ -233,7 +233,11 @@ export const mockData = {
       { id: "s1", customerId: "cust-1", query: "2BR apartment in Kampala", location: "Kampala", radius: 5, propertyType: "apartment", filters: { maxPrice: 1000000, radiusKm: 5 }, resultCount: 12, resultPropertyIds: ["p1", "p2", "p3"], minPrice: 0, maxPrice: 1000000, subCounty: "Kampala", district: "Kampala", createdAt: "2026-09-10T08:00:00Z" },
       { id: "s2", customerId: "cust-2", query: "Villa in Muyenga", location: "Muyenga", radius: 10, propertyType: "villa", filters: { radiusKm: 10 }, resultCount: 4, resultPropertyIds: ["p4", "p5"], minPrice: 0, maxPrice: 0, subCounty: "Makindye", district: "Kampala", createdAt: "2026-09-10T07:30:00Z" },
       { id: "s3", customerId: "cust-1", query: "Land plot in Kira", location: "Kira", radius: 15, propertyType: "land", filters: { minPrice: 5000000, radiusKm: 15 }, resultCount: 2, resultPropertyIds: ["p6"], minPrice: 5000000, maxPrice: 0, subCounty: "Wakiso", district: "Wakiso", createdAt: "2026-09-09T18:20:00Z" },
-    ];
+    ].sort((a, b) => {
+      const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+      return numB - numA;
+    });
     const filtered = Object.entries(filters).filter(([_, v]) => v !== undefined && v !== "" && v !== 0).reduce(
       (acc, [key, value]) => {
         if (key === "customerId") return acc.filter((s: any) => s.customerId === value);
@@ -242,8 +246,12 @@ export const mockData = {
         if (key === "location") return acc.filter((s: any) => s.location?.toLowerCase().includes(String(value).toLowerCase()));
         if (key === "subCounty") return acc.filter((s: any) => s.subCounty?.toLowerCase().includes(String(value).toLowerCase()));
         if (key === "district") return acc.filter((s: any) => s.district?.toLowerCase().includes(String(value).toLowerCase()));
+        if (key === "brokerCode") return acc.filter((s: any) => s.brokersUniqueCode?.toLowerCase().includes(String(value).toLowerCase()));
+        if (key === "brokerBrandName") return acc.filter((s: any) => s.brokerBrandName?.toLowerCase().includes(String(value).toLowerCase()));
         if (key === "minPrice") return acc.filter((s: any) => s.minPrice >= Number(value));
         if (key === "maxPrice") return acc.filter((s: any) => s.maxPrice <= Number(value) && s.maxPrice > 0);
+        if (key === "fromDate") return acc.filter((s: any) => new Date(s.createdAt) >= new Date(String(value)));
+        if (key === "toDate") return acc.filter((s: any) => new Date(s.createdAt) <= new Date(String(value)));
         return acc;
       },
       all as any[],
