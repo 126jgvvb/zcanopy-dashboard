@@ -3,7 +3,11 @@
 
 import { useState } from "react";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
-import { adminApi } from "@/lib/api";
+import { adminApi, formatDate } from "@/lib/api";
+import { COLORS } from "@/lib/theme";
+import { FileType } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import SearchFilters from "@/components/SearchFilters";
 import FilterUsageChart from "@/components/FilterUsageChart";
 
@@ -34,6 +38,7 @@ export default function SearchesPage() {
     toDate: undefined as string | undefined,
   });
   const [page, setPage] = useState(1);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
 
   const searches = useAdminData(
     (token) =>
@@ -128,6 +133,222 @@ export default function SearchesPage() {
     setPage(1);
   };
 
+  const handleGeneratePDF = async () => {
+    const allData = (allSearches.data as { searches?: any[] })?.searches ?? [];
+    if (allData.length === 0) return;
+
+    setPdfGenerating(true);
+    try {
+      const doc = new jsPDF();
+      const primaryColor: [number, number, number] = [169, 113, 14];
+      const accentGold: [number, number, number] = [209, 160, 84];
+      const cardBrown: [number, number, number] = [93, 64, 55];
+
+      const addSectionTitle = (title: string, y: number) => {
+        doc.setFontSize(12);
+        doc.setTextColor(...primaryColor);
+        doc.setFont("helvetica", "bold");
+        doc.text(title, 14, y);
+        return y + 7;
+      };
+
+      const addKeyValue = (key: string, value: string, y: number) => {
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${key}:`, 14, y);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(50, 50, 50);
+        doc.text(value, 42, y);
+        return y + 5;
+      };
+
+      let y = 16;
+
+      const logoDataUrl = await (async () => {
+        try {
+          const res = await fetch("/logo.svg");
+          const svgText = await res.text();
+          const blob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          return await new Promise<string | null>((resolve) => {
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              canvas.width = 120;
+              canvas.height = 120;
+              const ctx = canvas.getContext("2d");
+              if (!ctx) { URL.revokeObjectURL(url); resolve(null); return; }
+              ctx.fillStyle = "white";
+              ctx.fillRect(0, 0, 120, 120);
+              ctx.drawImage(img, 0, 0, 120, 120);
+              URL.revokeObjectURL(url);
+              resolve(canvas.toDataURL("image/png"));
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+            img.src = url;
+          });
+        } catch {
+          return null;
+        }
+      })();
+
+      if (logoDataUrl) {
+        doc.addImage(logoDataUrl, "PNG", 14, y, 24, 24);
+      }
+      doc.setFontSize(20);
+      doc.setTextColor(...primaryColor);
+      doc.setFont("helvetica", "bold");
+      doc.text("ZCanopy Admin Dashboard", 44, y + 6);
+      doc.setFontSize(13);
+      doc.setTextColor(...cardBrown);
+      doc.setFont("helvetica", "normal");
+      doc.text("Customer Searches Report", 44, y + 14);
+      y += 30;
+
+      doc.setDrawColor(...accentGold);
+      doc.setLineWidth(0.5);
+      doc.line(14, y, 196, y);
+      y += 8;
+
+      const withQuery = allData.filter((s: any) => s.query).length;
+      const withoutQuery = allData.length - withQuery;
+      const typeCounts: Record<string, number> = {};
+      allData.forEach((s: any) => {
+        const t = s.propertyType || "Unknown";
+        typeCounts[t] = (typeCounts[t] || 0) + 1;
+      });
+      const sortedTypes = Object.entries(typeCounts).sort(([, a], [, b]) => (b as number) - (a as number));
+      const maxCount = Math.max(...sortedTypes.map(([, v]) => v as number), 1);
+
+      y = addSectionTitle("Summary Statistics", y);
+      y = addKeyValue("Total Searches", allData.length.toString(), y);
+      y = addKeyValue("With Query", `${withQuery} (${((withQuery / allData.length) * 100).toFixed(1)}%)`, y);
+      y = addKeyValue("Without Query", `${withoutQuery} (${((withoutQuery / allData.length) * 100).toFixed(1)}%)`, y);
+      y += 6;
+
+      if (sortedTypes.length > 0) {
+        doc.setFontSize(10);
+        doc.setTextColor(...cardBrown);
+        doc.setFont("helvetica", "bold");
+        doc.text("Searches by Property Type", 14, y);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(120, 120, 120);
+        doc.text("(Most to Least)", 14, y + 4);
+        y += 8;
+
+        const barHeight = 10;
+        const barGap = 4;
+        const labelWidth = 30;
+        const startX = 14 + labelWidth;
+        const maxBarWidth = 140;
+
+        sortedTypes.forEach(([type, count], i) => {
+          const countNum = count as number;
+          const barWidth = (countNum / maxCount) * maxBarWidth;
+          const barY = y + i * (barHeight + barGap);
+          doc.setFillColor(...primaryColor);
+          doc.roundedRect(startX, barY, Math.max(barWidth, 2), barHeight, 1, 1, "F");
+          doc.setTextColor(40, 40, 40);
+          doc.text(countNum.toString(), startX + barWidth + 2, barY + barHeight - 2);
+          doc.setFontSize(7);
+          doc.setTextColor(100, 100, 100);
+          doc.text(type.charAt(0).toUpperCase() + type.slice(1), startX + maxBarWidth + 4, barY + barHeight - 2);
+        });
+        y += sortedTypes.length * (barHeight + barGap) + 10;
+      }
+
+      doc.setFontSize(10);
+      doc.setTextColor(...cardBrown);
+      doc.setFont("helvetica", "bold");
+      doc.text("Query Presence Overview", 14, y);
+      y += 6;
+
+      const totalQ = withQuery + withoutQuery;
+      if (totalQ > 0) {
+        const barY = y;
+        const barHeight = 10;
+        const barGap = 4;
+        const maxBarWidth = 90;
+
+        const withPct = withQuery / totalQ;
+        const withoutPct = withoutQuery / totalQ;
+
+        doc.setFillColor(...primaryColor);
+        doc.roundedRect(14, barY, withPct * maxBarWidth, barHeight, 1, 1, "F");
+        doc.setTextColor(40, 40, 40);
+        doc.setFontSize(7);
+        doc.text(`With Query (${withQuery}) — ${withPct.toFixed(0)}%`, 14 + withPct * maxBarWidth + 2, barY + barHeight - 2);
+
+        y += barHeight + barGap;
+        doc.setFillColor(...accentGold);
+        doc.roundedRect(14, y, withoutPct * maxBarWidth, barHeight, 1, 1, "F");
+        doc.setTextColor(40, 40, 40);
+        doc.setFontSize(7);
+        doc.text(`Without Query (${withoutQuery}) — ${withoutPct.toFixed(0)}%`, 14 + withoutPct * maxBarWidth + 2, y + barHeight - 2);
+
+        y += barHeight + 10;
+      } else {
+        y += 8;
+      }
+      doc.setDrawColor(...accentGold);
+      doc.setLineWidth(0.3);
+      doc.line(14, y, 196, y);
+      y += 8;
+
+      y = addSectionTitle("Search Records", y);
+      doc.setFontSize(8);
+      doc.setTextColor(90, 90, 90);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Report contains ${allData.length} search record(s).`, 14, y);
+      y += 5;
+
+      const searchRows = allData.map((s: any) => [
+        s.id,
+        s.customerId || "—",
+        s.query || "—",
+        s.location || "—",
+        s.propertyType || "—",
+        s.radius ? `${s.radius} km` : "—",
+        s.minPrice || s.maxPrice ? `${s.minPrice || 0} — ${s.maxPrice || 0}` : "—",
+        `${s.subCounty || ""} / ${s.district || ""}`,
+        formatFilters(s.filters) || "—",
+        s.resultCount ?? 0,
+        Array.isArray(s.resultPropertyIds) && s.resultPropertyIds.length > 0
+          ? s.resultPropertyIds.slice(0, 3).join(", ") + (s.resultPropertyIds.length > 3 ? ` +${s.resultPropertyIds.length - 3}` : "")
+          : "—",
+        formatDate(s.createdAt),
+      ]);
+
+      autoTable(doc, {
+        startY: y,
+        head: [["ID", "Customer", "Query", "Location", "Type", "Radius", "Price Range", "County/District", "Filters", "Results", "Property IDs", "Created"]],
+        body: searchRows,
+        theme: "striped",
+        headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 6 },
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 6 },
+        didDrawPage: (data: any) => {
+          const pageCount = doc.getNumberOfPages();
+          doc.setFontSize(7);
+          doc.setTextColor(150, 150, 150);
+          doc.text(
+            `Generated on ${new Date().toLocaleString()} | ZCanopy Admin Dashboard | Page ${pageCount} of ${doc.getNumberOfPages()}`,
+            14, 285
+          );
+        },
+      });
+
+      doc.save(`searches-report-${new Date().toISOString().split("T")[0]}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -137,6 +358,15 @@ export default function SearchesPage() {
           </h2>
           <p className="text-sm text-gray-500">Recent search activity across customer sessions.</p>
         </div>
+        <button
+          onClick={handleGeneratePDF}
+          disabled={pdfGenerating || allSearches.loading || !allSearches.data}
+          className="hover-gold inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-60"
+          style={{ backgroundColor: COLORS.accentGold }}
+        >
+          <FileType className="h-4 w-4" />
+          {pdfGenerating ? "Generating..." : "Download PDF"}
+        </button>
       </div>
 
       <Panel title="Filters">
