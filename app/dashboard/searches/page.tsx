@@ -4,34 +4,85 @@
 import { useState } from "react";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
 import { adminApi } from "@/lib/api";
-
-const QUERY_PRESENCE = ["all", "with_query", "no_query"] as const;
+import SearchFilters from "@/components/SearchFilters";
+import FilterUsageChart from "@/components/FilterUsageChart";
 
 const PAGE_SIZE = 20;
 
+function sortByIdDesc(searches: any[]): any[] {
+  return [...searches].sort((a, b) => {
+    const numA = parseInt(a.id?.replace(/\D/g, "") || "0", 10) || 0;
+    const numB = parseInt(b.id?.replace(/\D/g, "") || "0", 10) || 0;
+    return numB - numA;
+  });
+}
+
 export default function SearchesPage() {
-  const [customerId, setCustomerId] = useState("");
-  const [query, setQuery] = useState("");
-  const [queryPresence, setQueryPresence] = useState<(typeof QUERY_PRESENCE)[number]>("all");
+  const [filters, setFilters] = useState({
+    customerId: undefined as string | undefined,
+    query: undefined as string | undefined,
+    queryPresence: "all" as "all" | "with_query" | "no_query",
+    propertyType: undefined as string | undefined,
+    location: undefined as string | undefined,
+    brokerCode: undefined as string | undefined,
+    brokerBrandName: undefined as string | undefined,
+    subCounty: undefined as string | undefined,
+    district: undefined as string | undefined,
+    minPrice: undefined as string | undefined,
+    maxPrice: undefined as string | undefined,
+    fromDate: undefined as string | undefined,
+    toDate: undefined as string | undefined,
+  });
   const [page, setPage] = useState(1);
+
   const searches = useAdminData(
     (token) =>
       adminApi.searches(token, page, PAGE_SIZE, {
-        customerId: customerId || undefined,
-        query: query || undefined,
+        customerId: filters.customerId,
+        query: filters.query,
+        propertyType: filters.propertyType,
+        location: filters.location,
+        brokerCode: filters.brokerCode,
+        brokerBrandName: filters.brokerBrandName,
+        subCounty: filters.subCounty,
+        district: filters.district,
+        minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+        maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+        fromDate: filters.fromDate,
+        toDate: filters.toDate,
       }),
-    [page, customerId, query],
+    [
+      page,
+      filters.customerId,
+      filters.query,
+      filters.propertyType,
+      filters.location,
+      filters.brokerCode,
+      filters.brokerBrandName,
+      filters.subCounty,
+      filters.district,
+      filters.minPrice,
+      filters.maxPrice,
+      filters.fromDate,
+      filters.toDate,
+    ],
+  );
+
+  const allSearches = useAdminData(
+    (token) => adminApi.searches(token, 1, 1000),
+    [],
   );
 
   const data = searches.data as { searches?: any[]; total?: number } | undefined;
 
-  const filtered = (data?.searches ?? []).filter((s: any) => {
-    if (queryPresence === "with_query" && !s.query) return false;
-    if (queryPresence === "no_query" && s.query) return false;
+  const sortedSearches = sortByIdDesc(data?.searches ?? []);
+
+  const filtered = sortedSearches.filter((s: any) => {
+    if (filters.queryPresence === "with_query" && !s.query) return false;
+    if (filters.queryPresence === "no_query" && s.query) return false;
     return true;
   });
 
-  // queryPresence filters client-side, so it must not affect the page count.
   const total = data?.total ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -53,6 +104,30 @@ export default function SearchesPage() {
       .join(", ");
   };
 
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      customerId: undefined,
+      query: undefined,
+      queryPresence: "all",
+      propertyType: undefined,
+      location: undefined,
+      brokerCode: undefined,
+      brokerBrandName: undefined,
+      subCounty: undefined,
+      district: undefined,
+      minPrice: undefined,
+      maxPrice: undefined,
+      fromDate: undefined,
+      toDate: undefined,
+    });
+    setPage(1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -65,51 +140,19 @@ export default function SearchesPage() {
       </div>
 
       <Panel title="Filters">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-medium text-gray-500">Customer ID</label>
-            <input
-              value={customerId}
-              onChange={(e) => {
-                setCustomerId(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Optional customer ID filter"
-              className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--zcanopy-surface)] px-4 py-2.5 text-sm outline-none"
-            />
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-medium text-gray-500">Search Query</label>
-            <input
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Optional query filter"
-              className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--zcanopy-surface)] px-4 py-2.5 text-sm outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500">Query Presence</label>
-            <div className="mt-1 flex gap-2">
-              {QUERY_PRESENCE.map((qp) => (
-                <button
-                  key={qp}
-                  onClick={() => setQueryPresence(qp)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium capitalize transition-all ${
-                    queryPresence === qp
-                      ? "text-white shadow-md"
-                      : "bg-white text-gray-600 hover:bg-gray-100"
-                  }`}
-                  style={queryPresence === qp ? { backgroundColor: "var(--zcanopy-primary)" } : {}}
-                >
-                  {qp === "all" ? "All" : qp === "with_query" ? "With query" : "No query"}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <SearchFilters filters={filters} onChange={handleFilterChange} onReset={resetFilters} />
+      </Panel>
+
+      <Panel title="Filter Usage Analytics">
+        {allSearches.loading ? (
+          <LoadingState label="Loading analytics" />
+        ) : allSearches.error ? (
+          <ErrorState message={allSearches.error} />
+        ) : (
+          <FilterUsageChart
+            searches={(allSearches.data as { searches?: any[] })?.searches ?? []}
+          />
+        )}
       </Panel>
 
       <Panel title={`Searches (${filtered.length} on this page)`}>
@@ -148,7 +191,7 @@ export default function SearchesPage() {
                     <td className="py-2.5 pr-4">{s.propertyType || "—"}</td>
                     <td className="py-2.5 pr-4">{s.radius ? `${s.radius} km` : "—"}</td>
                     <td className="py-2.5 pr-4">
-                      {s.minPrice || s.maxPrice ? `${s.minPrice || 0} — ${s.maxPrice || 0}` : "—"}
+                      {s.minPrice || s.maxPrice ? `${s.minPrice || 0} \u2014 ${s.maxPrice || 0}` : "—"}
                     </td>
                     <td className="py-2.5 pr-4">
                       {s.subCounty || s.district ? `${s.subCounty || ""} / ${s.district || ""}` : "—"}
