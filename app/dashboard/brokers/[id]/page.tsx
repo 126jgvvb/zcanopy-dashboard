@@ -32,6 +32,88 @@ function formatBytes(mb: number) {
   return `${mb} MB`;
 }
 
+function PieChart({ segments, size = 120, legend }: { segments: { label: string; value: number; color: string }[]; size?: number; legend?: boolean }) {
+  const total = segments.reduce((s, seg) => s + seg.value, 0);
+  if (total === 0) {
+    return <p className="py-4 text-center text-sm text-gray-400">No data to display.</p>;
+  }
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 4;
+  const polarToCartesian = (centerX: number, centerY: number, radius: number, angleDeg: number) => {
+    const angleRad = (angleDeg - 90) * Math.PI / 180;
+    return { x: centerX + radius * Math.cos(angleRad), y: centerY + radius * Math.sin(angleRad) };
+  };
+  const describeArc = (startAngle: number, endAngle: number) => {
+    const start = polarToCartesian(cx, cy, r, endAngle);
+    const end = polarToCartesian(cx, cy, r, startAngle);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+  };
+
+  const angles = segments.map((seg) => (seg.value / total) * 360);
+  const paths = segments.map((seg, i) => {
+    const startAngle = angles.slice(0, i).reduce((a, b) => a + b, 0);
+    const endAngle = startAngle + angles[i];
+    return {
+      path: describeArc(startAngle, endAngle),
+      color: seg.color,
+      label: seg.label,
+      value: seg.value,
+    };
+  });
+
+  return (
+    <div className="flex items-center gap-4">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-lg">
+        {paths.map((p, i) => (
+          <path key={i} d={p.path} fill={p.color} stroke="white" strokeWidth={1.5} />
+        ))}
+      </svg>
+      {legend && (
+        <div className="flex flex-col gap-1.5 text-xs">
+          {segments.map((s, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: s.color }} />
+              <span className="text-gray-600">{s.label}: </span>
+              <span className="font-medium text-gray-800">{s.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BarChart({ data, maxValue }: { data: { label: string; value: number; color: string }[]; maxValue: number }) {
+  const barHeight = 16;
+  return (
+    <div className="space-y-2.5">
+      {data.map((item, i) => {
+        const width = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+        return (
+          <div key={i} className="flex items-center gap-2 text-xs">
+            <span className="w-20 truncate text-gray-500">{item.label}</span>
+            <div className="relative flex-1">
+              <div
+                className="rounded-sm transition-all"
+                style={{
+                  width: `${Math.max(width, 2)}%`,
+                  height: barHeight,
+                  backgroundColor: item.color,
+                }}
+              />
+              <span className="absolute -top-3 right-0 text-xs font-medium" style={{ color: item.color }}>
+                {item.value}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function BrokerDetailPage({
   params,
 }: {
@@ -102,6 +184,16 @@ export default function BrokerDetailPage({
   const bookings = details.data?.bookings ?? [];
   const props = properties.data?.properties ?? [];
   const limits = TIER_LIMITS[parsedTier.tier.toLowerCase()] ?? TIER_LIMITS.prop;
+
+  const bookedCount = bookings.length;
+  const currentCount = props.length;
+  const typeCounts: Record<string, number> = {};
+  props.forEach((p: any) => {
+    const t = p.propertyType || "Unknown";
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+  const sortedTypes = Object.entries(typeCounts).sort(([, a], [, b]) => (b as number) - (a as number));
+  const maxTypeCount = Math.max(...sortedTypes.map(([, v]) => v as number), 1);
 
   return (
     <div className="space-y-6">
@@ -344,7 +436,7 @@ export default function BrokerDetailPage({
             )}
           </Panel>
 
-          <Panel title="Bookings">
+           <Panel title="Bookings">
             {bookings.length === 0 ? (
               <p className="py-6 text-center text-sm text-gray-400">No bookings yet.</p>
             ) : (
@@ -367,6 +459,32 @@ export default function BrokerDetailPage({
                 ))}
               </div>
             )}
+          </Panel>
+
+          <Panel title="Analytics">
+            <div className="space-y-6">
+              <div>
+                <h4 className="mb-3 text-xs font-semibold uppercase text-gray-500">Booked vs Current Properties</h4>
+                <PieChart
+                  segments={[
+                    { label: "Booked", value: bookedCount, color: COLORS.accentGold },
+                    { label: "Current", value: currentCount, color: COLORS.primary },
+                  ]}
+                  legend
+                />
+              </div>
+              <div>
+                <h4 className="mb-3 text-xs font-semibold uppercase text-gray-500">Property Types Managed</h4>
+                <BarChart
+                  data={sortedTypes.map(([type, value], i) => ({
+                    label: type,
+                    value: value as number,
+                    color: i === 0 ? COLORS.primary : i === 1 ? COLORS.accentGold : COLORS.cardBrown,
+                  }))}
+                  maxValue={maxTypeCount}
+                />
+              </div>
+            </div>
           </Panel>
         </div>
       </div>
