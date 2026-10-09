@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, useRef, useId, type ReactNode } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { ApiError } from "@/lib/api";
 import { getCache, setCache, invalidateCache } from "@/lib/cache";
@@ -17,6 +17,10 @@ type Fetcher<T> = (token: string) => Promise<T>;
  * A 30-second stale window means data older than 30s is silently
  * revalidated; data newer than that is served from cache without a
  * network request unless the caller explicitly reloads.
+ *
+ * Pass an explicit `cacheKey` to share cached data across components
+ * (e.g. the same endpoint used on multiple pages). When omitted, a
+ * unique per-component key is generated automatically.
  */
 export function useAdminData<T>(
   fetcher: Fetcher<T>,
@@ -28,8 +32,9 @@ export function useAdminData<T>(
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const fetcherRef = useRef(fetcher);
+  const reactId = useId();
   const maxAge = options.maxAge ?? 30_000;
-  const key = options.cacheKey ?? "admin-data";
+  const key = options.cacheKey ?? `admin-data-${reactId}`;
 
   useEffect(() => {
     fetcherRef.current = fetcher;
@@ -52,7 +57,7 @@ export function useAdminData<T>(
     const cached = getCache<T>(key, maxAge);
     if (cached) {
       setData(cached.value);
-      if (!loading) setLoading(false);
+      setLoading(false);
     } else {
       setLoading(true);
     }
@@ -86,7 +91,7 @@ export function useAdminData<T>(
         }
       })
       .finally(() => {
-        if (active && !getCache<T>(key)) setLoading(false);
+        if (active) setLoading(false);
       });
     return () => {
       active = false;
@@ -182,9 +187,9 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-6 shadow-[var(--zcanopy-shadow-sm)]">
+    <section className="rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-4 shadow-[var(--zcanopy-shadow-sm)] sm:p-6">
       {(title || action) && (
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
           {title ? (
             <h2 className="text-base font-semibold tracking-tight text-[var(--zcanopy-card-brown)]">
               {title}
@@ -210,18 +215,18 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-5 shadow-[var(--zcanopy-shadow-sm)] transition-shadow duration-200 hover:shadow-[var(--zcanopy-shadow-md)]">
+    <div className="relative min-w-0 overflow-hidden rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-4 shadow-[var(--zcanopy-shadow-sm)] transition-shadow duration-200 hover:shadow-[var(--zcanopy-shadow-md)] sm:p-5">
       <span
         aria-hidden
         className="absolute inset-y-0 left-0 w-0.5 bg-[var(--zcanopy-accent-gold)]"
       />
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--zcanopy-muted)]">
+      <p className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--zcanopy-muted)] sm:text-[11px]">
         {label}
       </p>
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-[var(--zcanopy-card-brown)]">
+      <p className="mt-2 break-words text-xl font-semibold tracking-tight text-[var(--zcanopy-card-brown)] sm:mt-3 sm:text-2xl">
         {value}
       </p>
-      {hint ? <p className="mt-1 text-xs text-[var(--zcanopy-muted)]">{hint}</p> : null}
+      {hint ? <p className="mt-0.5 truncate text-[11px] text-[var(--zcanopy-muted)] sm:mt-1 sm:text-xs">{hint}</p> : null}
     </div>
   );
 }

@@ -191,7 +191,7 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard label="Total Earnings" value={currency(c.totalEarnings)} hint="Platform + booking" />
         <StatCard label="Platform Commission" value={currency(c.platformCommission)} />
         <StatCard label="Booking Commission" value={currency(c.bookingCommission)} />
