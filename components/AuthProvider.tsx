@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { adminApi, ApiError } from "@/lib/api";
+import { invalidateCache } from "@/lib/cache";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
@@ -166,6 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearTokenCookie();
     clearDevBypassCookie();
     setAdmin(null);
+    // Clear all cached data so the next admin sees a fresh state.
+    invalidateCache();
   }, []);
 
   const refreshToken = useCallback(async () => {

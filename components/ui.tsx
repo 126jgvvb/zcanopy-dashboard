@@ -3,17 +3,33 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { ApiError } from "@/lib/api";
+import { getCache, setCache, invalidateCache } from "@/lib/cache";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
 import { COLORS } from "@/lib/theme";
 
 type Fetcher<T> = (token: string) => Promise<T>;
 
-export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
+/**
+ * Client-side caching hook with stale-while-revalidate semantics.
+ *
+ * On first mount it shows a loading state, then serves cached data
+ * instantly on subsequent mounts while a background fetch refreshes it.
+ * A 30-second stale window means data older than 30s is silently
+ * revalidated; data newer than that is served from cache without a
+ * network request unless the caller explicitly reloads.
+ */
+export function useAdminData<T>(
+  fetcher: Fetcher<T>,
+  deps: unknown[] = [],
+  options: { maxAge?: number; cacheKey?: string } = {},
+) {
   const { admin, refreshToken, loading: authLoading } = useAuth();
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const fetcherRef = useRef(fetcher);
+  const maxAge = options.maxAge ?? 30_000;
+  const key = options.cacheKey ?? "admin-data";
 
   useEffect(() => {
     fetcherRef.current = fetcher;
@@ -30,14 +46,29 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
       return;
     }
     let active = true;
-    setLoading(true);
     setError(null);
+
+    // Serve cached data instantly if available (stale-while-revalidate).
+    const cached = getCache<T>(key, maxAge);
+    if (cached) {
+      setData(cached.value);
+      if (!loading) setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
+    // Always attempt a background revalidation.
     fetcherRef.current(admin.token)
       .then((result) => {
-        if (active) setData(result);
+        if (!active) return;
+        setCache(key, result);
+        setData(result);
       })
       .catch(async (err) => {
         if (!active) return;
+        // If we already have cached data, don't surface the error — the
+        // stale value is still usable and the user can reload manually.
+        if (getCache<T>(key)) return;
         if (err instanceof ApiError && err.status === 401) {
           try {
             await refreshToken();
@@ -55,20 +86,23 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
         }
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active && !getCache<T>(key)) setLoading(false);
       });
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [admin, authLoading, refreshToken, ...deps]);
+  }, [admin, authLoading, refreshToken, key, ...deps]);
 
   function reload() {
     if (!admin) return;
     setLoading(true);
     setError(null);
     fetcherRef.current(admin.token)
-      .then(setData)
+      .then((result) => {
+        setCache(key, result);
+        setData(result);
+      })
       .catch(async (err) => {
         if (err instanceof ApiError && err.status === 401) {
           try {
@@ -88,6 +122,14 @@ export function useAdminData<T>(fetcher: Fetcher<T>, deps: unknown[] = []) {
   }
 
   return { data, error, loading, reload };
+}
+
+/**
+ * Force-invalidate cached data for a key (e.g. after a mutation).
+ * Pass `undefined` to clear the entire cache (useful on logout).
+ */
+export function useCacheInvalidation() {
+  return invalidateCache;
 }
 
 /**
