@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import Sidebar from "@/components/Sidebar";
@@ -8,6 +8,7 @@ import ZLoadingIndicator from "@/components/ZLoadingIndicator";
 import ThemeToggle from "@/components/ThemeToggle";
 import CookieBanner from "@/components/CookieBanner";
 import { COLORS } from "@/lib/theme";
+import { Menu } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { admin, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     console.log('[DashboardLayout] guard', { loading, admin: !!admin });
@@ -40,10 +42,18 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-[var(--background)]">
-      <Sidebar admin={admin} />
+      <Sidebar admin={admin} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)]/75 px-4 py-3 backdrop-blur-md sm:px-8 sm:py-4">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen((s) => !s)}
+              className="rounded-lg p-2 text-[var(--zcanopy-card-brown)] hover:bg-[var(--zcanopy-overlay)] md:hidden"
+              aria-label="Toggle menu"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <h1 className="text-lg font-semibold tracking-tight text-[var(--zcanopy-card-brown)]">ZCanopy Admin</h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">

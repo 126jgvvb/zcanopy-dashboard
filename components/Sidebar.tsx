@@ -20,6 +20,7 @@ import {
   History,
   Users,
   Tag,
+  X,
 } from "lucide-react";
 import { COLORS, can, type AdminCapability } from "@/lib/theme";
 
@@ -50,8 +51,12 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function Sidebar({
   admin,
+  open = false,
+  onClose,
 }: {
   admin: { username: string; role: string };
+  open?: boolean;
+  onClose?: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -62,60 +67,83 @@ export default function Sidebar({
   );
 
   return (
-    <aside className="flex w-64 flex-col border-r border-black/10 bg-[var(--zcanopy-card-brown)] text-white shadow-[var(--zcanopy-shadow-md)]">
-      <div className="flex items-center gap-3 px-6 py-7">
-          <img
-            src="/logo.svg"
-            alt="ZCanopy"
-            className="h-10 w-10 object-contain"
-            style={{ mixBlendMode: 'multiply' }}
-          />
-          <div>
-            <span className="text-lg font-semibold tracking-tight">ZCanopy</span>
-            <span className="block text-[10px] uppercase tracking-[0.18em] text-white/55">Admin Console</span>
+    <>
+      {open && onClose && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`flex w-64 flex-col border-r border-black/10 bg-[var(--zcanopy-card-brown)] text-white shadow-[var(--zcanopy-shadow-md)] transition-transform duration-300 ease-out md:translate-x-0 md:static md:inset-auto ${open ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50`}
+      >
+        <div className="flex items-center justify-between px-6 py-7">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.svg"
+              alt="ZCanopy"
+              className="h-10 w-10 object-contain"
+              style={{ mixBlendMode: 'multiply' }}
+            />
+            <div>
+              <span className="text-lg font-semibold tracking-tight">ZCanopy</span>
+              <span className="block text-[10px] uppercase tracking-[0.18em] text-white/55">Admin Console</span>
+            </div>
           </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         <nav className="flex-1 space-y-0.5 px-3 py-1">
-        {visible.map((item) => {
-          const active =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`hover-gold flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
-                active
-                  ? "bg-[var(--zcanopy-accent-gold)] font-semibold text-[var(--zcanopy-card-brown)] shadow-md"
-                  : "text-white/78 hover:text-[#4a2f1c]"
-              }`}
-            >
-              {item.icon}
-              {item.label}
-              {item.capability === "manage_messages" && (
-                <span className="ml-auto flex h-2 w-2 rounded-full bg-green-400" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+          {visible.map((item) => {
+            const active =
+              pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={`hover-gold flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
+                  active
+                    ? "bg-[var(--zcanopy-accent-gold)] font-semibold text-[var(--zcanopy-card-brown)] shadow-md"
+                    : "text-white/78 hover:text-[#4a2f1c]"
+                }`}
+              >
+                {item.icon}
+                {item.label}
+                {item.capability === "manage_messages" && (
+                  <span className="ml-auto flex h-2 w-2 rounded-full bg-green-400" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
 
-      <div className="border-t border-white/10 p-3">
-        <div className="mb-2 rounded-xl bg-white/[0.08] p-3 ring-1 ring-white/10">
-          <p className="text-sm font-semibold tracking-tight">{admin.username}</p>
-          <p className="text-xs capitalize text-white/55">{admin.role.replace("_", " ")}</p>
+        <div className="border-t border-white/10 p-3">
+          <div className="mb-2 rounded-xl bg-white/[0.08] p-3 ring-1 ring-white/10">
+            <p className="text-sm font-semibold tracking-tight">{admin.username}</p>
+            <p className="text-xs capitalize text-white/55">{admin.role.replace("_", " ")}</p>
+          </div>
+          <button
+            onClick={() => {
+              logout();
+              router.replace("/login");
+            }}
+            className="hover-gold w-full rounded-xl px-3 py-2.5 text-left text-sm text-white/78"
+          >
+            Sign out
+          </button>
         </div>
-        <button
-          onClick={() => {
-            logout();
-            router.replace("/login");
-          }}
-          className="hover-gold w-full rounded-xl px-3 py-2.5 text-left text-sm text-white/78"
-        >
-          Sign out
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
