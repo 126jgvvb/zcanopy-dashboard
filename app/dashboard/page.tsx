@@ -51,8 +51,8 @@ function AreaChart({ entries }: { entries: { month: string; income: number }[] }
   const areaD = `${pathD} L ${points[points.length - 1].x} ${padding.top + innerH} L ${points[0].x} ${padding.top + innerH} Z`;
 
   return (
-    <div className="relative">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+    <div className="relative w-full overflow-hidden">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-w-full">
         <defs>
           <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={COLORS.primary} stopOpacity="0.3" />
@@ -101,12 +101,12 @@ function AreaChart({ entries }: { entries: { month: string; income: number }[] }
         ))}
       </svg>
 
-      <HoverTooltip points={points} />
+      <HoverTooltip points={points} width={width} height={height} />
     </div>
   );
 }
 
-function HoverTooltip({ points }: { points: { x: number; y: number; income: number; month: string }[] }) {
+function HoverTooltip({ points, width, height }: { points: { x: number; y: number; income: number; month: string }[]; width: number; height: number }) {
   const [active, setActive] = useState<{ x: number; y: number; income: number; month: string } | null>(null);
 
   return (
@@ -118,7 +118,7 @@ function HoverTooltip({ points }: { points: { x: number; y: number; income: numb
         <div
           key={i}
           className="absolute h-6 w-6 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-          style={{ left: `${(p.x / 600) * 100}%`, top: `${(p.y / 200) * 100}%` }}
+          style={{ left: `${(p.x / width) * 100}%`, top: `${(p.y / height) * 100}%` }}
           onMouseEnter={() => setActive(p)}
           onMouseMove={(e) => {
             const rect = e.currentTarget.parentElement?.getBoundingClientRect();

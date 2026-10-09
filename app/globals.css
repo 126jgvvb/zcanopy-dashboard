@@ -266,6 +266,42 @@ tbody tr {
   background-clip: padding-box;
 }
 
+@media (max-width: 1024px) {
+  .lg\\:hidden\\:md {
+    display: none;
+  }
+}
+
+/* Responsive table wrapper: horizontal scroll on small screens */
+.responsive-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Compact stat cards on mobile */
+@media (max-width: 640px) {
+  .stat-card-compact .stat-value {
+    font-size: 1.25rem;
+  }
+}
+
+/* Filter buttons on mobile */
+@media (max-width: 640px) {
+  .filter-btn {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Hide sidebar text on very small screens */
+@media (max-width: 768px) {
+  .sidebar-text-sm {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

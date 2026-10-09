@@ -51,12 +51,12 @@ export default function AdminsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {STATUSES.map((s) => (
             <button
               key={s}
               onClick={() => setStatus(s)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+              className={`rounded-full px-3 py-1.5 text-sm font-medium capitalize transition-all sm:px-4 sm:py-1.5 filter-btn ${
                 status === s
                   ? "text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-gray-100"
@@ -106,7 +106,7 @@ export default function AdminsPage() {
         ) : filtered.length === 0 ? (
           <p className="py-8 text-center text-sm text-gray-400">No admins found.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="responsive-table-wrap">
             <table className="w-full text-left text-sm">
               <thead className="text-[11px] uppercase tracking-[0.12em] text-[var(--zcanopy-muted)]">
                 <tr>
