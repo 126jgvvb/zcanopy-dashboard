@@ -485,6 +485,12 @@ export const adminApi = {
   searchById: (token: string, id: string) =>
     apiFetch(`/admin/searches/${id}`, { token }),
 
+  deleteSearch: (token: string, searchId: string) =>
+    apiFetch(`/admin/searches/${searchId}`, { method: "DELETE", token, fallback: { success: true, message: "Search deleted (mock)" } }),
+
+  deleteSearches: (token: string, searchIds: string[]) =>
+    apiFetch("/admin/searches/batch-delete", { method: "DELETE", token, body: { searchIds }, fallback: { success: true, message: `Deleted ${searchIds.length} searches (mock)` } }),
+
   customers: (token: string, page = 1, limit = 10, isActive?: boolean, search?: string) =>
     apiFetch("/admin/customers", {
       token,

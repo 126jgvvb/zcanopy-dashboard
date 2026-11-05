@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/components/AuthProvider";
 import { useAdminData, Panel, LoadingState, ErrorState } from "@/components/ui";
-import { adminApi, formatDate } from "@/lib/api";
-import { COLORS } from "@/lib/theme";
+import { adminApi, formatDate, ApiError } from "@/lib/api";
+import { COLORS, can } from "@/lib/theme";
 import { FileType } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -22,6 +23,7 @@ function sortByIdDesc(searches: any[]): any[] {
 }
 
 export default function SearchesPage() {
+  const { admin } = useAuth();
   const [filters, setFilters] = useState({
     customerId: undefined as string | undefined,
     query: undefined as string | undefined,
@@ -39,6 +41,9 @@ export default function SearchesPage() {
   });
   const [page, setPage] = useState(1);
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const searches = useAdminData(
     (token) =>
@@ -90,6 +95,50 @@ export default function SearchesPage() {
 
   const total = data?.total ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const canDelete = can(admin?.role, "manage_customers");
+  const allSelected = filtered.length > 0 && filtered.every((s) => selected.has(s.id));
+
+  const toggleSelection = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) filtered.forEach((s) => next.delete(s.id));
+      else filtered.forEach((s) => next.add(s.id));
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    setSelected(new Set());
+  }, [page, filters]);
+
+  const handleDeleteSearches = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setActionError(null);
+    setDeleting(true);
+    try {
+      if (ids.length === 1) {
+        await adminApi.deleteSearch(admin!.token, ids[0]);
+      } else {
+        await adminApi.deleteSearches(admin!.token, ids);
+      }
+      setSelected(new Set());
+      searches.reload();
+      allSearches.reload();
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Failed to delete search(es).");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const formatFilters = (filters: any) => {
     if (!filters || typeof filters === "string") {
@@ -358,15 +407,26 @@ export default function SearchesPage() {
           </h2>
           <p className="text-sm text-gray-500">Recent search activity across customer sessions.</p>
         </div>
-        <button
-          onClick={handleGeneratePDF}
-          disabled={pdfGenerating || allSearches.loading || !allSearches.data}
-          className="hover-gold inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-60"
-          style={{ backgroundColor: COLORS.accentGold }}
-        >
-          <FileType className="h-4 w-4" />
-          {pdfGenerating ? "Generating..." : "Download PDF"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {canDelete && selected.size > 0 ? (
+            <button
+              disabled={deleting}
+              onClick={() => handleDeleteSearches([...selected])}
+              className="rounded-xl bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-200 disabled:opacity-60"
+            >
+              {deleting ? "Deleting…" : `Delete (${selected.size})`}
+            </button>
+          ) : null}
+          <button
+            onClick={handleGeneratePDF}
+            disabled={pdfGenerating || allSearches.loading || !allSearches.data}
+            className="hover-gold inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-60"
+            style={{ backgroundColor: COLORS.accentGold }}
+          >
+            <FileType className="h-4 w-4" />
+            {pdfGenerating ? "Generating..." : "Download PDF"}
+          </button>
+        </div>
       </div>
 
       <Panel title="Filters">
@@ -385,6 +445,8 @@ export default function SearchesPage() {
         )}
       </Panel>
 
+      {actionError ? <ErrorState message={actionError} /> : null}
+
       <Panel title={`Searches (${filtered.length} on this page)`}>
         {searches.loading ? (
           <LoadingState label="Loading searches" />
@@ -397,6 +459,17 @@ export default function SearchesPage() {
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase text-gray-400">
                 <tr>
+                  {canDelete ? (
+                    <th className="py-2 pr-4">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleSelectAll}
+                        aria-label="Select all searches on this page"
+                        className="h-4 w-4 accent-[#A9710E]"
+                      />
+                    </th>
+                  ) : null}
                   <th className="py-2 pr-4">ID</th>
                   <th className="py-2 pr-4">Customer ID</th>
                   <th className="py-2 pr-4">Query</th>
@@ -413,7 +486,21 @@ export default function SearchesPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((s: any) => (
-                  <tr key={s.id} className="hover:bg-[#D1A054]/5 transition-colors">
+                  <tr
+                    key={s.id}
+                    className={`transition-colors hover:bg-[#D1A054]/5 ${selected.has(s.id) ? "bg-[#D1A054]/10" : ""}`}
+                  >
+                    {canDelete ? (
+                      <td className="py-2.5 pr-4">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(s.id)}
+                          onChange={() => toggleSelection(s.id)}
+                          aria-label={`Select search ${s.id}`}
+                          className="h-4 w-4 accent-[#A9710E]"
+                        />
+                      </td>
+                    ) : null}
                     <td className="py-2.5 pr-4 font-mono text-xs">{s.id}</td>
                     <td className="py-2.5 pr-4 font-mono text-xs">{s.customerId || "—"}</td>
                     <td className="py-2.5 pr-4">{s.query || "—"}</td>
