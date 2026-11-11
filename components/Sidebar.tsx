@@ -20,6 +20,7 @@ import {
   History,
   Users,
   Tag,
+  ScrollText,
   X,
 } from "lucide-react";
 import { COLORS, can, type AdminCapability } from "@/lib/theme";
@@ -34,6 +35,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Overview", capability: "view_dashboard", icon: <LayoutGrid className="h-4 w-4" /> },
   { href: "/dashboard/brokers", label: "Brokers", capability: "manage_brokers", icon: <Briefcase className="h-4 w-4" /> },
+  { href: "/dashboard/landlord-verifications", label: "Landlord Verifications", capability: "manage_brokers", icon: <ScrollText className="h-4 w-4" /> },
   { href: "/dashboard/customers", label: "Customers", capability: "manage_customers", icon: <Users className="h-4 w-4" /> },
   { href: "/dashboard/properties", label: "Properties", capability: "manage_brokers", icon: <Home className="h-4 w-4" /> },
   { href: "/dashboard/transactions", label: "Transactions", capability: "manage_finances", icon: <ArrowLeftRight className="h-4 w-4" /> },

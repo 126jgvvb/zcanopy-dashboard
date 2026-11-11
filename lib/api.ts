@@ -331,6 +331,48 @@ export const adminApi = {
       fallback: { success: true, message: "Document approved (mock)" },
     }),
 
+  /* ---- Landlord & title (UgNLIS) verifications ---- */
+
+  landlordVerifications: (
+    token: string,
+    page = 1,
+    limit = 20,
+    status = "all",
+    brokerCode?: string,
+  ) =>
+    apiFetch<{ verifications: any[]; total: number; page: number; limit: number }>(
+      "/admin/landlord-verifications",
+      {
+        token,
+        query: { page, limit, status, brokerCode: brokerCode ?? "" },
+        fallback: { verifications: [], total: 0, page, limit },
+      },
+    ),
+
+  approveLandlordVerification: (
+    token: string,
+    verificationId: string,
+    payload: { instrumentNumber: string },
+  ) =>
+    apiFetch(`/admin/landlord-verifications/${verificationId}/approve`, {
+      method: "POST",
+      token,
+      body: payload,
+      fallback: { success: true, message: "Landlord verification approved (mock)" },
+    }),
+
+  rejectLandlordVerification: (
+    token: string,
+    verificationId: string,
+    payload: { reason: string },
+  ) =>
+    apiFetch(`/admin/landlord-verifications/${verificationId}/reject`, {
+      method: "POST",
+      token,
+      body: payload,
+      fallback: { success: true, message: "Landlord verification rejected (mock)" },
+    }),
+
   approveAllPending: (token: string) =>
     apiFetch("/admin/pending/verifications/approve-all", {
       method: "POST",
