@@ -18,6 +18,7 @@ import {
   Clock,
   BadgeCheck,
   FileText,
+  Phone,
 } from "lucide-react";
 
 interface LandlordVerification {
@@ -43,6 +44,7 @@ interface LandlordVerification {
   instrumentNumber: string;
   rejectionReason: string;
   status: string;
+  requiresLandlordAuthorization?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -113,7 +115,10 @@ export default function LandlordVerificationsPage() {
     setActing(`appr-${v.id}`);
     try {
       const res = await adminApi.approveLandlordVerification(admin!.token, v.id, { instrumentNumber });
-      setActionSuccess(res?.message || "Approved. The broker has been notified and can now withdraw funds.");
+      setActionSuccess(
+        res?.message ||
+          "Approved. The landlord is now registered against their NIN, the broker has been notified and can withdraw funds.",
+      );
       verifications.reload();
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : "Failed to approve.");
@@ -163,7 +168,9 @@ export default function LandlordVerificationsPage() {
         </h2>
         <p className="text-sm text-[var(--zcanopy-muted)]">
           Landlord identity and property title details submitted by brokers for UgNLIS title searches.
-          Record the Ministry instrument number to approve.
+          Record the Ministry instrument number to approve. Approving also registers the landlord against
+          their NIN, so any other broker representing the same landlord must obtain the landlord&apos;s
+          OTP authorisation and confirm their own NIN before they are verified.
         </p>
       </div>
 
@@ -282,7 +289,16 @@ export default function LandlordVerificationsPage() {
                             />
                           )}
                         </td>
-                        <td className="py-2 pr-4">{statusBadge(v.status)}</td>
+                        <td className="py-2 pr-4">
+                          <div className="flex flex-col items-start gap-1">
+                            {statusBadge(v.status)}
+                            {v.requiresLandlordAuthorization ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                <Phone className="h-3 w-3" /> Awaiting landlord OTP
+                              </span>
+                            ) : null}
+                          </div>
+                        </td>
                         <td className="py-3">
                           <div className="flex flex-wrap gap-2">
                             <button
