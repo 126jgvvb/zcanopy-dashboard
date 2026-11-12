@@ -87,7 +87,7 @@ function statusBadge(status: string) {
 
 export default function LandlordVerificationsPage() {
   const { admin } = useAuth();
-  const [tab, setTab] = useState<(typeof STATUS_TABS)[number]>("pending");
+  const [tab, setTab] = useState<(typeof STATUS_TABS)[number]>("all");
   const [search, setSearch] = useState("");
 
   // Per-row state
