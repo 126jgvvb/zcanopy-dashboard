@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import {
@@ -82,10 +83,12 @@ export default function Sidebar({
       >
         <div className="flex items-center justify-between px-6 py-7">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/logo.svg"
               alt="ZCanopy"
               className="h-10 w-10 object-contain"
+              width={40}
+              height={40}
               style={{ mixBlendMode: 'multiply' }}
             />
             <div>

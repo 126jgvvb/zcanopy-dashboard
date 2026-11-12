@@ -100,6 +100,17 @@ function buildUrl(path: string, query?: RequestOptions["query"]): string {
  * Client errors (4xx such as 401/403/404/400) are surfaced as real errors so
  * genuine problems are never masked by mock data.
  */
+/**
+ * Mock fallbacks are a development convenience only.
+ *
+ * In production a failed request must surface the error: the admin console
+ * moves real money (withdrawals, commissions, tier prices) and approves real
+ * verifications, so answering with fake data would be worse than an error.
+ */
+function mockFallbackAllowed(): boolean {
+  return process.env.NODE_ENV === "development";
+}
+
 function shouldUseFallback(err: unknown): boolean {
   // Network / connection failure (server down, CORS, DNS, offline).
   if (!(err instanceof ApiError)) return true;
@@ -107,7 +118,7 @@ function shouldUseFallback(err: unknown): boolean {
   return err.status >= 500 || err.status === 0;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export async function apiFetch<T = any>(
   path: string,
   { method = "GET", body, token, query, fallback }: RequestOptions = {},
@@ -142,17 +153,14 @@ export async function apiFetch<T = any>(
       throw new ApiError(message as string, res.status);
     }
 
-    if (typeof window !== 'undefined') {
-      console.log('[apiFetch] raw server response', path, JSON.parse(JSON.stringify(data)));
-    }
     return data as T;
   } catch (err) {
     // Only fall back to mock data when the server is actually down/failing,
     // not for client errors (auth, validation, not-found, etc.).
-    if (fallback !== undefined && shouldUseFallback(err)) {
+    if (fallback !== undefined && mockFallbackAllowed() && shouldUseFallback(err)) {
       if (typeof console !== "undefined") {
         console.warn(
-          `[api] Server request to "${path}" failed (${err instanceof ApiError ? err.status : "network error"}). Falling back to mock data.`,
+          `[api] Server request to "${path}" failed (${err instanceof ApiError ? err.status : "network error"}). Falling back to mock data (development only).`,
         );
       }
       return fallback as T;
@@ -244,7 +252,6 @@ async function uploadToSpacesViaProxy(file: File, folder = 'properties'): Promis
   return data.publicUrl;
 }
 
-import { mockData, MOCK_CUSTOMERS } from "@/lib/mockData";
 import { decryptResponse } from "@/lib/crypto";
 
 export const adminApi = {
@@ -282,22 +289,25 @@ export const adminApi = {
     })),
 
   commissions: (token: string) =>
-    apiFetch("/admin/commissions", { token, fallback: mockData.commission() }),
+    apiFetch("/admin/commissions", { token}),
 
   brokerCommissions: (token: string) =>
-    apiFetch("/admin/broker-commissions", { token, fallback: mockData.brokerCommissions() }),
+    apiFetch("/admin/broker-commissions", { token}),
 
   currentCommission: (token: string) =>
-    apiFetch("/admin/commission/current", { token, fallback: mockData.currentCommission() }),
+    apiFetch("/admin/commission/current", { token}),
 
   monthlyIncome: (token: string) =>
     apiFetch<{ entries: { month: string; income: number }[] }>(
       "/admin/income/monthly",
-      { token, fallback: mockData.income() },
-    ).then((data) => {
+      { token},
+    ).then(async (data) => {
       if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
         const entries = (data as any)?.entries;
         if (!entries || entries.length === 0) {
+          // Development only, and loaded on demand so the mock catalogue never
+          // reaches the production bundle.
+          const { mockData } = await import("@/lib/mockData");
           return mockData.income();
         }
       }
@@ -305,38 +315,36 @@ export const adminApi = {
     }),
 
   brokers: (token: string, page = 1, limit = 10) =>
-    apiFetch("/admin/brokers", { token, query: { page, limit }, fallback: mockData.brokers() }),
+    apiFetch("/admin/brokers", { token, query: { page, limit }}),
 
   recentSignups: (token: string, limit = 10) =>
-    apiFetch("/admin/recent/signups", { token, query: { limit }, fallback: mockData.recentSignups(limit) }),
+    apiFetch("/admin/recent/signups", { token, query: { limit }}),
 
   pendingVerifications: (token: string, page = 1, limit = 10) =>
-    apiFetch("/admin/pending/verifications", { token, query: { page, limit }, fallback: mockData.pendingVerifications(page, limit) }),
+    apiFetch("/admin/pending/verifications", { token, query: { page, limit }}),
 
   pendingDocuments: (token: string) =>
-    apiFetch("/admin/pending/documents", { token, fallback: { documents: [] } }),
+    apiFetch("/admin/pending/documents", { token}),
 
   properties: (token: string, page = 1, limit = 10, brokerCode?: string) =>
     apiFetch("/admin/properties", {
       token,
       query: { page, limit, brokerCode: brokerCode ?? "" },
-      fallback: mockData.properties(page, limit),
     }),
 
   propertyLocations: (token: string) =>
-    apiFetch("/admin/property/locations", { token, fallback: mockData.propertyLocations() }),
+    apiFetch("/admin/property/locations", { token}),
 
   property: (token: string, propertyId: string) =>
-    apiFetch(`/admin/properties/${propertyId}`, { token, fallback: mockData.property(propertyId) }),
+    apiFetch(`/admin/properties/${propertyId}`, { token }),
 
   brokerDetails: (token: string, brokerId: string) =>
-    apiFetch(`/admin/brokers/${brokerId}/details`, { token, fallback: mockData.brokerDetails(brokerId) }),
+    apiFetch(`/admin/brokers/${brokerId}/details`, { token }),
 
   brokerProperties: (token: string, brokerId: string, page = 1, limit = 10) =>
     apiFetch(`/admin/brokers/${brokerId}/properties`, {
       token,
       query: { page, limit },
-      fallback: mockData.brokerProperties(brokerId, page, limit),
     }),
 
   approveDocument: (
@@ -348,7 +356,6 @@ export const adminApi = {
       method: "POST",
       token,
       body: payload,
-      fallback: { success: true, message: "Document approved (mock)" },
     }),
 
   /* ---- Landlord & title (UgNLIS) verifications ---- */
@@ -365,7 +372,6 @@ export const adminApi = {
       {
         token,
         query: { page, limit, status, brokerCode: brokerCode ?? "" },
-        fallback: { verifications: [], total: 0, page, limit },
       },
     ),
 
@@ -378,7 +384,6 @@ export const adminApi = {
       method: "POST",
       token,
       body: payload,
-      fallback: { success: true, message: "Landlord verification approved (mock)" },
     }),
 
   rejectLandlordVerification: (
@@ -390,7 +395,6 @@ export const adminApi = {
       method: "POST",
       token,
       body: payload,
-      fallback: { success: true, message: "Landlord verification rejected (mock)" },
     }),
 
   /* ---- Landlord phone numbers (landlord registry) ---- */
@@ -400,13 +404,6 @@ export const adminApi = {
       `/admin/landlord-registry/${encodeURIComponent(landlordNin)}/phones`,
       {
         token,
-        fallback: {
-          success: false,
-          landlordNin,
-          landlordFullName: "",
-          phones: [],
-          selectedPhoneNumber: "",
-        },
       },
     ),
 
@@ -421,14 +418,6 @@ export const adminApi = {
         method: "POST",
         token,
         body: payload,
-        fallback: {
-          success: false,
-          message: "Could not add the phone number.",
-          landlordNin,
-          landlordFullName: "",
-          phones: [],
-          selectedPhoneNumber: "",
-        },
       },
     ),
 
@@ -443,14 +432,6 @@ export const adminApi = {
         method: "POST",
         token,
         body: payload,
-        fallback: {
-          success: false,
-          message: "Could not select the phone number.",
-          landlordNin,
-          landlordFullName: "",
-          phones: [],
-          selectedPhoneNumber: "",
-        },
       },
     ),
 
@@ -465,14 +446,6 @@ export const adminApi = {
         method: "POST",
         token,
         body: payload,
-        fallback: {
-          success: false,
-          message: "Could not remove the phone number.",
-          landlordNin,
-          landlordFullName: "",
-          phones: [],
-          selectedPhoneNumber: "",
-        },
       },
     ),
 
@@ -480,31 +453,28 @@ export const adminApi = {
     apiFetch("/admin/pending/verifications/approve-all", {
       method: "POST",
       token,
-      fallback: { success: true, totalProcessed: 0, successful: 0, failed: 0, results: [] },
     }),
 
   deleteBroker: (token: string, brokerId: string) =>
-    apiFetch(`/admin/brokers/${brokerId}`, { method: "DELETE", token, fallback: { success: true, message: "Broker deleted (mock)" } }),
+    apiFetch(`/admin/brokers/${brokerId}`, { method: "DELETE", token}),
 
   editBrokerTier: (token: string, brokerId: string, tier: string) =>
     apiFetch(`/admin/brokers/${brokerId}/tier`, {
       method: "PUT",
       token,
       body: { tier },
-      fallback: { success: true, message: "Tier updated (mock)" },
     }),
 
-  admins: (token: string) => apiFetch("/admin/admins", { token, fallback: mockData.admins() }),
+  admins: (token: string) => apiFetch("/admin/admins", { token}),
 
   addAdmin: (token: string, payload: Record<string, unknown>) =>
-    apiFetch("/admin/admins", { method: "POST", token, body: payload, fallback: { id: "mock-new", ...payload, message: "Admin added (mock)" } }),
+    apiFetch("/admin/admins", { method: "POST", token, body: payload}),
 
   deleteAdmin: (token: string, adminId: string, deletedBy: string) =>
     apiFetch(`/admin/admins/${adminId}`, {
       method: "DELETE",
       token,
       body: { deletedBy },
-      fallback: { success: true, message: "Admin deleted (mock)" },
     }),
 
   freezeAdmin: (token: string, adminId: string, freeze: boolean, updatedBy: string) =>
@@ -512,7 +482,6 @@ export const adminApi = {
       method: "PUT",
       token,
       body: { freeze, updatedBy },
-      fallback: { success: true, message: freeze ? "Admin frozen (mock)" : "Admin unfrozen (mock)" },
     }),
 
   updateAdminUsername: (token: string, adminId: string, username: string) =>
@@ -520,66 +489,62 @@ export const adminApi = {
       method: "PUT",
       token,
       body: { username },
-      fallback: { success: true, message: "Username updated (mock)" },
     }),
 
   generateInvitationCode: (
     token: string,
     payload: { role: string; expiryHours: number },
   ) =>
-    apiFetch("/admin/invitation-code", { method: "POST", token, body: payload, fallback: { invitationCode: "DEV-CODE-123", role: payload.role, expiresAt: new Date(Date.now() + 86400000).toISOString() } }),
+    apiFetch("/admin/invitation-code", { method: "POST", token, body: payload}),
 
   transactions: (token: string, page = 1, limit = 10, brokerId?: string, reason?: string) =>
     apiFetch("/admin/transactions", {
       token,
       query: { page, limit, brokerId: brokerId ?? "", reason: reason ?? "" },
-      fallback: mockData.transactions(page, limit),
     }),
 
   systemMessages: (token: string, page = 1, limit = 10) =>
-    apiFetch("/admin/system/messages", { token, query: { page, limit }, fallback: mockData.systemMessages(page, limit) }),
+    apiFetch("/admin/system/messages", { token, query: { page, limit }}),
 
   clientMessages: (token: string, page = 1, limit = 10) =>
-    apiFetch("/admin/client/messages", { token, query: { page, limit }, fallback: mockData.clientMessages(page, limit) }),
+    apiFetch("/admin/client/messages", { token, query: { page, limit }}),
 
   sendMessage: (token: string, payload: Record<string, unknown>) =>
-    apiFetch("/admin/messages/send", { method: "POST", token, body: payload, fallback: { success: true, message: "Message sent (mock)", messageId: "mock-msg-1" } }),
+    apiFetch("/admin/messages/send", { method: "POST", token, body: payload}),
 
   notifications: (token: string, query?: Record<string, string | number | undefined>) =>
-    apiFetch("/admin/notifications", { token, query, fallback: mockData.notifications(query) }),
+    apiFetch("/admin/notifications", { token, query}),
 
   wallet: (token: string, walletId?: string) =>
-    apiFetch("/admin/wallet", { token, query: { walletId: walletId ?? "" }, fallback: mockData.wallet() }),
+    apiFetch("/admin/wallet", { token, query: { walletId: walletId ?? "" }}),
 
   withdraw: (token: string, payload: Record<string, unknown>) =>
-    apiFetch("/admin/withdraw", { method: "POST", token, body: payload, fallback: { success: true, message: "Withdrawal initiated (mock)", transactionId: "mock-txn-1", referenceNumber: "REF-MOCK-001", status: "pending", netAmount: payload.amount } }),
+    apiFetch("/admin/withdraw", { method: "POST", token, body: payload}),
 
   sendWithdrawalOtp: (token: string, payload: { email: string; amount: number; walletType?: string }) =>
-    apiFetch("/admin/withdraw/otp/send", { method: "POST", token, body: payload, fallback: { success: true, message: "OTP sent to admin email", expiresIn: 300 } }),
+    apiFetch("/admin/withdraw/otp/send", { method: "POST", token, body: payload}),
 
   verifyWithdrawalOtp: (token: string, payload: { email: string; otp: string }) =>
-    apiFetch("/admin/withdraw/otp/verify", { method: "POST", token, body: payload, fallback: { success: true, message: "OTP verified successfully", valid: true } }),
+    apiFetch("/admin/withdraw/otp/verify", { method: "POST", token, body: payload}),
 
   tiers: (token: string) =>
-    apiFetch<{ tiers: TierPrice[] }>("/admin/tiers", { token, fallback: { tiers: [{ tier: "fibrous", price: 25000 }, { tier: "buttress", price: 50000 }, { tier: "prop", price: 0 }] } }),
+    apiFetch<{ tiers: TierPrice[] }>("/admin/tiers", { token}),
 
   updateTierPrice: (token: string, tier: string, price: number) =>
     apiFetch(`/admin/tiers/${tier}`, {
       method: "PUT",
       token,
       body: { price },
-      fallback: { success: true, message: "Tier price updated (mock)" },
     }),
 
   logs: (token: string, page = 1, limit = 10, level?: string, service?: string) =>
     apiFetch("/admin/logs", {
       token,
       query: { page, limit, level: level ?? "", service: service ?? "" },
-      fallback: mockData.logs(page, limit, level, service),
     }),
 
   activeSessions: (token: string) =>
-    apiFetch("/admin/customers/active-sessions", { token, fallback: mockData.activeSessions() }),
+    apiFetch("/admin/customers/active-sessions", { token}),
 
   searches: (
     token: string,
@@ -624,55 +589,52 @@ export const adminApi = {
         lng: filters.lng ?? 0,
         radiusKm: filters.radiusKm ?? 0,
       },
-      fallback: mockData.searches(page, limit, filters),
     }),
 
   searchById: (token: string, id: string) =>
     apiFetch(`/admin/searches/${id}`, { token }),
 
   deleteSearch: (token: string, searchId: string) =>
-    apiFetch(`/admin/searches/${searchId}`, { method: "DELETE", token, fallback: { success: true, message: "Search deleted (mock)" } }),
+    apiFetch(`/admin/searches/${searchId}`, { method: "DELETE", token}),
 
   deleteSearches: (token: string, searchIds: string[]) =>
-    apiFetch("/admin/searches/batch-delete", { method: "DELETE", token, body: { searchIds }, fallback: { success: true, message: `Deleted ${searchIds.length} searches (mock)` } }),
+    apiFetch("/admin/searches/batch-delete", { method: "DELETE", token, body: { searchIds }}),
 
   customers: (token: string, page = 1, limit = 10, isActive?: boolean, search?: string) =>
     apiFetch("/admin/customers", {
       token,
       query: { page, limit, isActive, search: search || '' },
-      fallback: mockData.customers(page, limit, isActive, search),
     }),
 
   customerDetails: (token: string, customerId: string) =>
-    apiFetch(`/admin/customers/${customerId}`, { token, fallback: mockData.customerDetails(customerId) }),
+    apiFetch(`/admin/customers/${customerId}`, { token}),
 
   customerTransactions: (token: string, customerId: string, page = 1, limit = 10) =>
-    apiFetch(`/admin/customers/${customerId}/transactions`, { token, query: { page, limit }, fallback: mockData.customerTransactions(customerId, page, limit) }),
+    apiFetch(`/admin/customers/${customerId}/transactions`, { token, query: { page, limit }}),
 
   customerInvoices: (token: string, customerId: string, page = 1, limit = 10) =>
-    apiFetch(`/admin/customers/${customerId}/invoices`, { token, query: { page, limit }, fallback: mockData.customerInvoices(customerId, page, limit) }),
+    apiFetch(`/admin/customers/${customerId}/invoices`, { token, query: { page, limit }}),
 
   customerBookings: (token: string, customerId: string, page = 1, limit = 10) =>
-    apiFetch(`/admin/customers/${customerId}/bookings`, { token, query: { page, limit }, fallback: mockData.customerBookings(customerId, page, limit) }),
+    apiFetch(`/admin/customers/${customerId}/bookings`, { token, query: { page, limit }}),
 
   customerFavorites: (token: string, customerId: string, page = 1, limit = 10) =>
-    apiFetch(`/admin/customers/${customerId}/favorites`, { token, query: { page, limit }, fallback: mockData.customerFavorites(customerId, page, limit) }),
+    apiFetch(`/admin/customers/${customerId}/favorites`, { token, query: { page, limit }}),
 
   exportCustomers: (token: string, isActive?: boolean) =>
-    apiFetch("/admin/customers/export", { token, query: { isActive: isActive ?? "" }, fallback: { csv: "id,email,firstName,lastName,phoneNumber,isVerified,authProvider,isActive,createdAt\n" + MOCK_CUSTOMERS.map(c => `${c.id},${c.email},${c.firstName},${c.lastName},${c.phoneNumber},${c.isVerified},${c.authProvider},${c.isActive},${c.createdAt}`).join("\n") } }),
+    apiFetch("/admin/customers/export", { token, query: { isActive: isActive ?? "" }}),
 
   invoices: (token: string, page = 1, limit = 10, status?: string) =>
     apiFetch("/admin/invoices", {
       token,
       query: { page, limit, status: status ?? "" },
-      fallback: mockData.invoices(status),
     }),
 
   deleteInvoice: (token: string, invoiceId: string) =>
-    apiFetch(`/admin/invoices/${invoiceId}`, { method: "DELETE", token, fallback: { success: true, message: "Invoice deleted (mock)" } }),
+    apiFetch(`/admin/invoices/${invoiceId}`, { method: "DELETE", token}),
 
   deleteInvoices: (token: string, invoiceIds: string[]) =>
-    apiFetch("/admin/invoices/batch-delete", { method: "DELETE", token, body: { invoiceIds }, fallback: { success: true, message: `Deleted ${invoiceIds.length} invoices (mock)` } }),
+    apiFetch("/admin/invoices/batch-delete", { method: "DELETE", token, body: { invoiceIds }}),
 
   registerBroker: (payload: {
     fullName: string;
@@ -683,36 +645,34 @@ export const adminApi = {
   }) =>
     apiFetch<{ success: boolean; message: string; expiresInSeconds?: number }>(
       "/broker/register",
-      { method: "POST", body: payload, fallback: { success: true, message: "Account created (mock)" } },
+      { method: "POST", body: payload},
     ),
 
   sendBrokerOtp: (email: string, phoneNumber: string) =>
-    apiFetch("/broker/otp/send", { method: "POST", body: { email, phoneNumber }, fallback: { success: true, message: "OTP sent (mock)", devCode: "123456" } }),
+    apiFetch("/broker/otp/send", { method: "POST", body: { email, phoneNumber }}),
 
   verifyBrokerOtp: (email: string, phoneNumber: string, emailCode: string, phoneCode: string) =>
     apiFetch("/broker/otp/verify", {
       method: "POST",
       body: { email, phoneNumber, emailCode, phoneCode },
-      fallback: { success: true, message: "Verified (mock)" },
     }),
 
   sendForgotPasswordOtp: (email: string) =>
-    apiFetch<{ success: boolean; message: string }>("/admin/forgot-password/otp/send", { method: "POST", body: { email }, fallback: { success: true, message: "OTP sent (mock)" } }),
+    apiFetch<{ success: boolean; message: string }>("/admin/forgot-password/otp/send", { method: "POST", body: { email }}),
 
   verifyForgotPasswordOtp: (email: string, otp: string) =>
-    apiFetch<{ success: boolean; message: string; valid: boolean }>("/admin/forgot-password/otp/verify", { method: "POST", body: { email, otp }, fallback: { success: true, message: "OTP verified (mock)", valid: true } }),
+    apiFetch<{ success: boolean; message: string; valid: boolean }>("/admin/forgot-password/otp/verify", { method: "POST", body: { email, otp }}),
 
   resetPassword: (email: string, password: string) =>
-    apiFetch<{ success: boolean; message: string }>("/admin/forgot-password/reset", { method: "POST", body: { email, password }, fallback: { success: true, message: "Password reset (mock)" } }),
+    apiFetch<{ success: boolean; message: string }>("/admin/forgot-password/reset", { method: "POST", body: { email, password }}),
 
   featuredProperties: () =>
-    apiFetch("/public/properties/featured", { fallback: mockData.featuredProperties() }),
+    apiFetch("/public/properties/featured", {}),
 
   comments: (token: string, page = 1, limit = 20, propertyId?: string) =>
     apiFetch("/admin/comments", {
       token,
       query: { page, limit, propertyId: propertyId ?? "" },
-      fallback: mockData.comments(page, limit, propertyId),
     }),
 };
 

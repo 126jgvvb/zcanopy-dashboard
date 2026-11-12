@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client";
 
 import { useEffect, useState } from "react";
@@ -21,8 +21,7 @@ function AreaChart({ entries }: { entries: { month: string; income: number }[] }
   if (entries.length === 0) return <p className="py-6 text-center text-sm text-gray-400">No monthly income data yet.</p>;
 
   if (typeof window !== 'undefined') {
-    console.log('[AreaChart] rendering entries', entries);
-  }
+    }
 
   const width = 600;
   const height = 200;
@@ -32,7 +31,6 @@ function AreaChart({ entries }: { entries: { month: string; income: number }[] }
 
   const maxIncome = Math.max(...entries.map((e) => e.income));
   const minIncome = Math.min(...entries.map((e) => e.income));
-  const range = maxIncome - minIncome || 1;
 
   const effectiveMax = Math.max(1000, Math.ceil(Math.max(...entries.map((e) => e.income), 1000) / 1000) * 1000);
   const yTickValues = Array.from({ length: effectiveMax / 1000 }, (_, i) => (i + 1) * 1000);
@@ -186,8 +184,7 @@ export default function OverviewPage() {
   const entries = income.data?.entries ?? [];
 
   if (typeof window !== 'undefined') {
-    console.log('[OverviewPage] monthly income entries', entries);
-  }
+    }
 
   return (
     <div className="space-y-6">

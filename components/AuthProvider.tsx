@@ -68,16 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      console.log('[AuthProvider] init raw', raw);
       if (raw) {
         const parsed = JSON.parse(raw) as AdminProfile;
-        console.log('[AuthProvider] init parsed', parsed);
         if (active) setAdmin(parsed);
       } else {
         const bypass = document.cookie
           .split("; ")
           .find((c) => c.startsWith("zcanopy_dev_bypass="));
-        console.log('[AuthProvider] bypass cookie', bypass);
         if (bypass) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(DEV_ADMIN));
           setTokenCookie(DEV_ADMIN.token);
@@ -85,11 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (err) {
-      console.log('[AuthProvider] init error', err);
     } finally {
-      console.log('[AuthProvider] init finally active', active);
       if (active) {
-        console.log('[AuthProvider] init setLoading(false)');
         setLoading(false);
       }
     }

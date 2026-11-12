@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import {
@@ -664,9 +665,12 @@ function FavoriteTable({
               <td className="py-2 pr-4 font-semibold text-[var(--zcanopy-card-brown)]">UGX {f.price.toLocaleString()}</td>
               <td className="py-2 pr-4 text-gray-500">{new Date(f.addedAt).toLocaleDateString()}</td>
               <td className="py-2">
-                <img
+                <Image
                   src={f.imageUrl}
                   alt={f.propertyTitle}
+                  width={64}
+                  height={48}
+                  sizes="64px"
                   className="h-12 w-16 object-cover rounded-lg"
                 />
               </td>

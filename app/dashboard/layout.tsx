@@ -20,13 +20,11 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    console.log('[DashboardLayout] guard', { loading, admin: !!admin });
-    if (!loading && !admin) {
-      console.log('[DashboardLayout] redirecting to /login');
-      try {
+      if (!loading && !admin) {
+          try {
         router.replace("/login");
       } catch (err) {
-        console.log('[DashboardLayout] router.replace failed', err);
+        console.warn('[DashboardLayout] router.replace failed', err);
         window.location.href = "/login";
       }
     }

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client";
 
 import { use, useState, useEffect } from "react";
@@ -129,11 +129,8 @@ export default function BrokerDetailPage({
   useEffect(() => {
     if (details.data) {
       const raw = JSON.parse(JSON.stringify(details.data));
-      console.log('[BrokerDetailPage] raw details.data', raw);
-      const parsed = parseSubscriptionTier(raw.broker?.subscriptionTier);
-      console.log('[BrokerDetailPage] parsed tier', parsed.tier);
-      console.log('[BrokerDetailPage] parsed images', parsed.images);
-    }
+          const parsed = parseSubscriptionTier(raw.broker?.subscriptionTier);
+            }
   }, [details.data]);
 
   const properties = useAdminData(

@@ -14,8 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZCanopy Admin",
+  title: {
+    default: "ZCanopy Admin",
+    template: "%s | ZCanopy Admin",
+  },
   description: "ZCanopy administrative dashboard",
+  // The console is behind a session: it must never end up in a search index.
+  robots: { index: false, follow: false, nocache: true },
 };
 
 export default function RootLayout({
@@ -35,7 +40,6 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
-        <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
       <body className="min-h-full flex flex-col">
         <AuthProvider>{children}</AuthProvider>

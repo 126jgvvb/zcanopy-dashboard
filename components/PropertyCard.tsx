@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Image from "next/image";
 import { Camera, Home, MapPin, Video } from "lucide-react";
 import { COLORS } from "@/lib/theme";
 
@@ -92,10 +93,11 @@ export default function PropertyCard({
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[var(--zcanopy-overlay)]">
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={cover}
             alt={property.title ?? "Property"}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 40vw, 320px"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
@@ -141,8 +143,7 @@ export default function PropertyCard({
                 }`}
                 aria-label={`Photo ${idx + 1}`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="h-full w-full object-cover" />
+                <Image src={src} alt="" width={160} height={110} sizes="120px" className="h-full w-full object-cover" />
               </button>
             ))}
           </div>

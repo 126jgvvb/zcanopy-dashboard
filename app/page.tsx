@@ -12,8 +12,7 @@ export default function Home() {
 
   useEffect(() => {
     if (loading) return;
-    console.log('[HomePage] redirecting to /login');
-    router.replace("/login");
+      router.replace("/login");
   }, [loading, router]);
 
   return (

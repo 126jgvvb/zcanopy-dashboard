@@ -266,11 +266,6 @@ tbody tr {
   background-clip: padding-box;
 }
 
-@media (max-width: 1024px) {
-  .lg\\:hidden\\:md {
-    display: none;
-  }
-}
 
 /* Responsive table wrapper: horizontal scroll on small screens */
 .responsive-table-wrap {

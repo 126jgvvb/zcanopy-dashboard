@@ -1,7 +1,8 @@
 "use client";
 
-import { COLORS } from "@/lib/theme";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
+import Image from "next/image";
+import { COLORS } from "@/lib/theme";
 
 export function OnboardingShell({
   children,
@@ -43,9 +44,11 @@ export function OnboardingShell({
 export function BrandMark() {
   return (
     <div className="flex flex-col items-center gap-3">
-      <img
+      <Image
         src="/logo.svg"
         alt="ZCanopy"
+        width={48}
+        height={48}
         className="h-12 w-12 object-contain"
         style={{ mixBlendMode: "multiply" }}
       />

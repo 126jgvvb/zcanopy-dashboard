@@ -13,6 +13,16 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs-during-render": "off",
       "react-hooks/use-memo": "off",
+      // The gateway payloads are loosely typed throughout this console, and
+      // every response is decrypted at runtime, so `any` is used widely.
+      "@typescript-eslint/no-explicit-any": "off",
+      // API responses carry customer PII, NINs and wallet balances: they must
+      // never be written to the browser console.
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
   // Override default ignores of eslint-config-next.

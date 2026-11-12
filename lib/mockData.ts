@@ -96,15 +96,6 @@ const MOCK_INVOICES = [
   { id: "inv6", invoiceNumber: "INV-2026-006", recipientName: "Alice Namuli", recipientEmail: "alice@example.com", brokerCode: "BRK-001", issueDate: "2026-07-10T00:00:00Z", dueDate: "2026-07-24T00:00:00Z", amount: 850000, currency: "UGX", status: "pending", description: "Featured listing - Kololo Apartment" },
 ];
 
-const MOCK_INCOME = [
-  { month: "Jan", income: 4500000 },
-  { month: "Feb", income: 5200000 },
-  { month: "Mar", income: 4800000 },
-  { month: "Apr", income: 6100000 },
-  { month: "May", income: 5800000 },
-  { month: "Jun", income: 7200000 },
-  { month: "Jul", income: 6900000 },
-];
 
 export const mockData = {
   brokers: () => ({ brokers: MOCK_BROKERS, total: MOCK_BROKERS.length, page: 1, limit: 10 }),

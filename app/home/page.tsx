@@ -316,9 +316,9 @@ export default function LandingPage() {
 }
 
 function PropertyShowcase() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const { data, loading } = usePublicData(() => adminApi.featuredProperties());
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const properties: any[] = data?.properties ?? [];
   const [index, setIndex] = useState(0);
 

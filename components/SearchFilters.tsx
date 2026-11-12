@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client";
 
 const QUERY_PRESENCE = ["all", "with_query", "no_query"] as const;

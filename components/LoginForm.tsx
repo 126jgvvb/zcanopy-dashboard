@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Script from "next/script";
 import { useAuth } from "@/components/AuthProvider";
 import ZLoadingIndicator from "@/components/ZLoadingIndicator";
 import { COLORS } from "@/lib/theme";
@@ -47,6 +49,9 @@ export default function LoginForm({
   const [forgotPasswordStep, setForgotPasswordStep] = useState<"email" | "otp" | "reset">("email");
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState<string | null>(null);
   const googleButtonRef = useRef<HTMLDivElement>(null);
+  // The Google Identity Services script is loaded by this page; the button is
+  // rendered once it has arrived.
+  const [googleReady, setGoogleReady] = useState(false);
 
   const targetRedirect = redirect && redirect !== "/home" && redirect !== "/" ? redirect : "/dashboard";
 
@@ -150,6 +155,7 @@ export default function LoginForm({
   }
 
   useEffect(() => {
+    if (!googleReady) return;
     if (!window.google?.accounts?.id) return;
     window.google.accounts.id.initialize({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
@@ -173,7 +179,7 @@ export default function LoginForm({
         text: 'signin_with',
       });
     }
-  }, [login, router, redirect]);
+  }, [login, router, redirect, googleReady]);
 
   if (authLoading) {
     return (
@@ -184,12 +190,20 @@ export default function LoginForm({
   }
 
   return (
+    <>
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={() => setGoogleReady(true)}
+      />
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)] p-4">
       <div className="w-full max-w-md rounded-2xl border border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)] p-8 shadow-[var(--zcanopy-shadow-md)]">
         <div className="mb-6 flex flex-col items-center gap-3">
-          <img
+          <Image
             src="/logo.svg"
             alt="ZCanopy"
+            width={56}
+            height={56}
             className="h-14 w-14 object-contain"
           />
           <h1 className="text-2xl font-semibold tracking-tight text-[var(--zcanopy-card-brown)]">
@@ -380,5 +394,6 @@ export default function LoginForm({
         )}
       </div>
     </div>
+    </>
   );
 }
