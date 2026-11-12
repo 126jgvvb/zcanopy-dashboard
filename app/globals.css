@@ -274,6 +274,8 @@ tbody tr {
 .responsive-table-wrap {
   width: 100%;
   max-width: 100%;
+  /* Without this the scroller cannot shrink below the table's width. */
+  min-width: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   /* Let the wrapper shrink inside a flex/grid parent. Without this it is
@@ -303,7 +305,6 @@ tbody tr {
 .responsive-table-wrap > table {
   width: max-content;
   min-width: max(34rem, 100%);
-  max-width: 76rem;
 }
 
 /* Readable minimum widths, scaled by how many columns the table has. */
@@ -324,6 +325,7 @@ tbody tr {
 .responsive-table-wrap > table td,
 .responsive-table-wrap > table th {
   overflow-wrap: anywhere;
+  max-width: 22rem;
 }
 
 /* Compact stat cards on mobile */
