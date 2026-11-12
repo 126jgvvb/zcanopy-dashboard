@@ -497,6 +497,26 @@ export const adminApi = {
   ) =>
     apiFetch("/admin/invitation-code", { method: "POST", token, body: payload}),
 
+  /**
+   * Stops the escrow sweep from retrying a reversal that keeps failing. The
+   * provider rejects the disbursement, so every sweep burns a provider call
+   * and writes another failed transaction row for a booking that will never
+   * succeed.
+   */
+  stopBookingReversal: (token: string, bookingCode: string, reason?: string) =>
+    apiFetch(`/admin/bookings/${encodeURIComponent(bookingCode)}/stop-reversal`, {
+      method: "POST",
+      token,
+      body: { reason: reason || "" },
+    }),
+
+  /** Starts the escrow sweep retrying a booking again. */
+  resumeBookingReversal: (token: string, bookingCode: string) =>
+    apiFetch(`/admin/bookings/${encodeURIComponent(bookingCode)}/resume-reversal`, {
+      method: "POST",
+      token,
+    }),
+
   transactions: (token: string, page = 1, limit = 10, brokerId?: string, reason?: string) =>
     apiFetch("/admin/transactions", {
       token,
