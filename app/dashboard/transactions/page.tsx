@@ -100,6 +100,14 @@ export default function TransactionsPage() {
     }
   };
 
+  /** A reversal the escrow sweep retries. The status identifies it on its
+      own, so the console does not depend on the extra API fields. */
+  const isReversal = (t: any) =>
+    t?.isEscrowReversal === true ||
+    t?.provider === "iotec-mobile-money-reversal" ||
+    t?.status === REVERSAL_FAILED ||
+    t?.status === REVERSAL_STOPPED;
+
   const filtered = (tx.data?.transactions ?? []).filter((t: any) => {
     if (status !== "all" && t.status !== status) return false;
     const query = search.trim().toLowerCase();
@@ -110,6 +118,18 @@ export default function TransactionsPage() {
       t.referenceNumber?.toLowerCase().includes(query)
     );
   });
+
+  /** How many times this reversal has failed. Falls back to counting the
+      rows on this page when the API does not report it. */
+  const failureCountFor = (row: any): number => {
+    if (row?.reversalFailureCount) return row.reversalFailureCount;
+    const code = String(row?.transactionCode || "");
+    if (!code) return 0;
+    return filtered.filter(
+      (r: any) =>
+        String(r?.transactionCode || "") === code && r?.status === REVERSAL_FAILED,
+    ).length;
+  };
 
   return (
     <div className="space-y-6">
@@ -200,12 +220,12 @@ export default function TransactionsPage() {
                       >
                         {t.status}
                       </span>
-                      {t.isEscrowReversal && t.reversalFailureCount > 0 ? (
+                      {isReversal(t) && failureCountFor(t) > 0 ? (
                         <p className="mt-1 text-[11px] text-gray-400">
-                          failed {t.reversalFailureCount}× — every sweep retries it
+                          failed {failureCountFor(t)}× — every sweep retries it
                         </p>
                       ) : null}
-                      {t.isEscrowReversal && t.transactionCode ? (
+                      {isReversal(t) && t.transactionCode ? (
                         t.status === REVERSAL_STOPPED ? (
                           <button
                             type="button"
