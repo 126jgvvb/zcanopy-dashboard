@@ -69,7 +69,7 @@ export default function SessionsPage() {
             No sessions found.
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="responsive-table-wrap">
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase text-gray-400">
                 <tr>

@@ -305,7 +305,7 @@ export default function LandlordVerificationsPage() {
             No landlord verifications found.
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="responsive-table-wrap">
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase tracking-wide text-gray-400">
                 <tr>

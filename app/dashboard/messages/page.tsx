@@ -177,7 +177,7 @@ export default function MessagesPage() {
                 className="w-full bg-transparent text-sm outline-none"
               />
             </div>
-            <div className="overflow-x-auto">
+            <div className="responsive-table-wrap">
               <table className="w-full text-left text-sm">
                 <thead className="text-xs uppercase text-gray-400">
                   <tr>
@@ -307,7 +307,7 @@ export default function MessagesPage() {
                 <option value="1">1 ★</option>
               </select>
             </div>
-            <div className="overflow-x-auto">
+            <div className="responsive-table-wrap">
               <table className="w-full text-left text-sm">
                 <thead className="text-xs uppercase text-gray-400">
                   <tr>
@@ -379,7 +379,7 @@ export default function MessagesPage() {
                 ))}
               </select>
             </div>
-            <div className="overflow-x-auto">
+            <div className="responsive-table-wrap">
               <table className="w-full text-left text-sm">
                 <thead className="text-xs uppercase text-gray-400">
                   <tr>

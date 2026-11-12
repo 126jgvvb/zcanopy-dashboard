@@ -86,7 +86,7 @@ export default function CommissionsPage() {
         ) : filtered.length === 0 ? (
           <p className="py-8 text-center text-sm text-gray-400">No commission data yet.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="responsive-table-wrap">
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase text-gray-400">
                 <tr>

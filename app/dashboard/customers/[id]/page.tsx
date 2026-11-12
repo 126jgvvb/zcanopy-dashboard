@@ -460,7 +460,7 @@ function TransactionTable({
     return <p className="py-8 text-center text-sm text-gray-400">No transactions found.</p>;
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="responsive-table-wrap">
       <table className="w-full text-left text-sm">
         <thead className="text-xs uppercase tracking-wide text-gray-400">
           <tr>
@@ -525,7 +525,7 @@ function InvoiceTable({
     return <p className="py-8 text-center text-sm text-gray-400">No invoices found.</p>;
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="responsive-table-wrap">
       <table className="w-full text-left text-sm">
         <thead className="text-xs uppercase tracking-wide text-gray-400">
           <tr>
@@ -585,7 +585,7 @@ function BookingTable({
     return <p className="py-8 text-center text-sm text-gray-400">No bookings found.</p>;
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="responsive-table-wrap">
       <table className="w-full text-left text-sm">
         <thead className="text-xs uppercase tracking-wide text-gray-400">
           <tr>
@@ -644,7 +644,7 @@ function FavoriteTable({
     return <p className="py-8 text-center text-sm text-gray-400">No favorites found.</p>;
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="responsive-table-wrap">
       <table className="w-full text-left text-sm">
         <thead className="text-xs uppercase tracking-wide text-gray-400">
           <tr>

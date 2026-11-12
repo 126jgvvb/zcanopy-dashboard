@@ -126,7 +126,7 @@ function CustomerTable({
     return <p className="py-8 text-center text-sm text-gray-400">No customers found.</p>;
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="responsive-table-wrap">
       <table className="w-full text-left text-sm">
         <thead className="text-xs uppercase tracking-wide text-gray-400">
           <tr>

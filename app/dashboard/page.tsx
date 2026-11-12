@@ -470,7 +470,7 @@ function NotificationsTable({
       {filtered.length === 0 ? (
         <p className="py-6 text-center text-sm text-gray-400">No matching notifications.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="responsive-table-wrap">
           <table className="w-full text-left text-sm">
             <thead className="text-xs uppercase text-gray-400">
               <tr>
@@ -562,7 +562,7 @@ function ClientMessagesTable({
       {filtered.length === 0 ? (
         <p className="py-6 text-center text-sm text-gray-400">No matching comments.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="responsive-table-wrap">
           <table className="w-full text-left text-sm">
             <thead className="text-xs uppercase text-gray-400">
               <tr>

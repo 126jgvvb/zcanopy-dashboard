@@ -267,11 +267,52 @@ tbody tr {
 }
 
 
-/* Responsive table wrapper: horizontal scroll on small screens */
+/* Responsive table wrapper: horizontal scroll on small screens.
+   A table with `w-full` shrinks to fit its container, so the columns squash
+   instead of scrolling. The minimum widths below keep every column readable
+   and let the table scroll sideways inside the panel. */
 .responsive-table-wrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* Stop a sideways swipe from triggering the browser's back gesture. */
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  /* Shadow on the side that still has content, so the swipe is discoverable. */
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--zcanopy-card-brown) 16%, transparent), transparent),
+    linear-gradient(to left, color-mix(in srgb, var(--zcanopy-card-brown) 16%, transparent), transparent),
+    linear-gradient(to right, var(--zcanopy-surface), var(--zcanopy-surface)),
+    linear-gradient(to left, var(--zcanopy-surface), var(--zcanopy-surface));
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 28px 100%, 28px 100%, 28px 100%, 28px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* Readable minimum widths, scaled by how many columns the table has. */
+.responsive-table-wrap > table {
+  min-width: 34rem;
+}
+
+.responsive-table-wrap:has(> table > thead > tr > th:nth-child(7)) > table {
+  min-width: 48rem;
+}
+
+.responsive-table-wrap:has(> table > thead > tr > th:nth-child(10)) > table {
+  min-width: 62rem;
+}
+
+.responsive-table-wrap:has(> table > thead > tr > th:nth-child(13)) > table {
+  min-width: 76rem;
+}
+
+/* Long values (emails, references, descriptions) wrap inside the cell
+   instead of stretching the row. */
+.responsive-table-wrap > table td,
+.responsive-table-wrap > table th {
+  overflow-wrap: anywhere;
 }
 
 /* Compact stat cards on mobile */
