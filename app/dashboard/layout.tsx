@@ -42,7 +42,11 @@ export default function DashboardLayout({
     <div className="flex min-h-screen bg-[var(--background)]">
       <Sidebar admin={admin} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex flex-1 flex-col">
+      {/* min-w-0 lets this column shrink below the intrinsic width of its
+          contents. Without it a wide table inside main makes the column
+          wider than the screen, so the page scrolls sideways instead of the
+          table scrolling inside its own panel. */}
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-[var(--zcanopy-border)] bg-[var(--zcanopy-surface)]/75 px-4 py-3 backdrop-blur-md sm:px-8 sm:py-4">
           <div className="flex items-center gap-3">
             <button
@@ -68,7 +72,7 @@ export default function DashboardLayout({
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 [animation:fadeIn_0.35s_ease]">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 [animation:fadeIn_0.35s_ease]">{children}</main>
         <CookieBanner />
       </div>
     </div>

@@ -276,6 +276,10 @@ tbody tr {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* Let the wrapper shrink inside a flex/grid parent. Without this it is
+     sized by its content, so the whole page scrolls sideways instead of the
+     table scrolling inside the panel. */
+  min-width: 0;
   /* Stop a sideways swipe from triggering the browser's back gesture. */
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
@@ -291,21 +295,28 @@ tbody tr {
   background-attachment: local, local, scroll, scroll;
 }
 
-/* Readable minimum widths, scaled by how many columns the table has. */
+/* Size the table to its own content so the columns keep their natural width
+   and overflow the wrapper — that overflow is what gives the panel its
+   sideways scroll. `min-width: max(<floor>, 100%)` keeps a readable floor
+   while still filling a wide panel, and the cap stops one long cell from
+   stretching the table away. */
 .responsive-table-wrap > table {
-  min-width: 34rem;
+  width: max-content;
+  min-width: max(34rem, 100%);
+  max-width: 76rem;
 }
 
+/* Readable minimum widths, scaled by how many columns the table has. */
 .responsive-table-wrap:has(> table > thead > tr > th:nth-child(7)) > table {
-  min-width: 48rem;
+  min-width: max(48rem, 100%);
 }
 
 .responsive-table-wrap:has(> table > thead > tr > th:nth-child(10)) > table {
-  min-width: 62rem;
+  min-width: max(62rem, 100%);
 }
 
 .responsive-table-wrap:has(> table > thead > tr > th:nth-child(13)) > table {
-  min-width: 76rem;
+  min-width: max(76rem, 100%);
 }
 
 /* Long values (emails, references, descriptions) wrap inside the cell
