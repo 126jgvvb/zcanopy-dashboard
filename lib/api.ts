@@ -58,6 +58,26 @@ export interface TierPrice {
   price: number;
 }
 
+/** A phone number registered against a landlord on the landlord registry. */
+export interface LandlordPhone {
+  phoneNumber: string;
+  isPrimary: boolean;
+  label: string;
+}
+
+/**
+ * The landlord's registered numbers plus the one currently selected to
+ * receive their SMS OTPs.
+ */
+export interface LandlordRegistryPhonesResponse {
+  success: boolean;
+  message?: string;
+  landlordNin: string;
+  landlordFullName: string;
+  phones: LandlordPhone[];
+  selectedPhoneNumber: string;
+}
+
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
   const url = new URL(`${API_BASE}${path}`);
@@ -372,6 +392,89 @@ export const adminApi = {
       body: payload,
       fallback: { success: true, message: "Landlord verification rejected (mock)" },
     }),
+
+  /* ---- Landlord phone numbers (landlord registry) ---- */
+
+  landlordRegistryPhones: (token: string, landlordNin: string) =>
+    apiFetch<LandlordRegistryPhonesResponse>(
+      `/admin/landlord-registry/${encodeURIComponent(landlordNin)}/phones`,
+      {
+        token,
+        fallback: {
+          success: false,
+          landlordNin,
+          landlordFullName: "",
+          phones: [],
+          selectedPhoneNumber: "",
+        },
+      },
+    ),
+
+  addLandlordRegistryPhone: (
+    token: string,
+    landlordNin: string,
+    payload: { phoneNumber: string; label?: string },
+  ) =>
+    apiFetch<LandlordRegistryPhonesResponse>(
+      `/admin/landlord-registry/${encodeURIComponent(landlordNin)}/phones`,
+      {
+        method: "POST",
+        token,
+        body: payload,
+        fallback: {
+          success: false,
+          message: "Could not add the phone number.",
+          landlordNin,
+          landlordFullName: "",
+          phones: [],
+          selectedPhoneNumber: "",
+        },
+      },
+    ),
+
+  selectLandlordRegistryPhone: (
+    token: string,
+    landlordNin: string,
+    payload: { phoneNumber: string },
+  ) =>
+    apiFetch<LandlordRegistryPhonesResponse>(
+      `/admin/landlord-registry/${encodeURIComponent(landlordNin)}/phones/select`,
+      {
+        method: "POST",
+        token,
+        body: payload,
+        fallback: {
+          success: false,
+          message: "Could not select the phone number.",
+          landlordNin,
+          landlordFullName: "",
+          phones: [],
+          selectedPhoneNumber: "",
+        },
+      },
+    ),
+
+  removeLandlordRegistryPhone: (
+    token: string,
+    landlordNin: string,
+    payload: { phoneNumber: string },
+  ) =>
+    apiFetch<LandlordRegistryPhonesResponse>(
+      `/admin/landlord-registry/${encodeURIComponent(landlordNin)}/phones/remove`,
+      {
+        method: "POST",
+        token,
+        body: payload,
+        fallback: {
+          success: false,
+          message: "Could not remove the phone number.",
+          landlordNin,
+          landlordFullName: "",
+          phones: [],
+          selectedPhoneNumber: "",
+        },
+      },
+    ),
 
   approveAllPending: (token: string) =>
     apiFetch("/admin/pending/verifications/approve-all", {
