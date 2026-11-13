@@ -182,8 +182,11 @@ export default function BrokerDetailPage({
   const props = properties.data?.properties ?? [];
   const limits = TIER_LIMITS[parsedTier.tier.toLowerCase()] ?? TIER_LIMITS.prop;
 
+  // The properties page returns only page 1 (10 items); the service reports
+  // the real total, which is what the limits and the analytics pie should use.
+  const propsTotal = typeof properties.data?.total === "number" ? properties.data.total : undefined;
   const bookedCount = bookings.length;
-  const currentCount = props.length;
+  const currentCount = propsTotal ?? props.length;
   const typeCounts: Record<string, number> = {};
   props.forEach((p: any) => {
     const t = p.propertyType || "Unknown";
@@ -248,7 +251,7 @@ export default function BrokerDetailPage({
 
           <Panel title="Tier Limits">
             <div className="space-y-3">
-              <LimitRow label="Properties" used={props.length} max={limits.maxProperties} />
+              <LimitRow label="Properties" used={currentCount} max={limits.maxProperties} />
               <LimitRow label="Photos" used={props.reduce((s: number, p: any) => s + (p.photoCount ?? 0), 0)} max={limits.maxPhotos} />
               <LimitRow label="Videos" used={props.reduce((s: number, p: any) => s + (p.videoCount ?? 0), 0)} max={limits.maxVideos} />
               <div className="flex items-center justify-between text-sm">
