@@ -458,7 +458,7 @@ export default function BrokerDetailPage({
             ) : props.length === 0 ? (
               <p className="py-6 text-center text-sm text-gray-400">No properties.</p>
             ) : (
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <div className="grid max-h-[34rem] grid-cols-1 gap-5 overflow-y-auto pr-2 lg:grid-cols-2">
                 {props.map((p: any) => (
                   <PropertyCard key={p.id} property={p} limits={limits} />
                 ))}
