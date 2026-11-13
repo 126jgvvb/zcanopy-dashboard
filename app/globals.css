@@ -277,6 +277,10 @@ tbody tr {
   /* Without this the scroller cannot shrink below the table's width. */
   min-width: 0;
   overflow-x: auto;
+  overflow-y: auto;
+  /* Cap the height: once a table outgrows the panel it scrolls inside the
+     wrapper instead of stretching the page. */
+  max-height: 32rem;
   -webkit-overflow-scrolling: touch;
   /* Let the wrapper shrink inside a flex/grid parent. Without this it is
      sized by its content, so the whole page scrolls sideways instead of the
@@ -305,6 +309,16 @@ tbody tr {
 .responsive-table-wrap > table {
   width: max-content;
   min-width: max(34rem, 100%);
+}
+
+/* Pin the header so the body's rows scroll underneath it inside the capped
+   wrapper. The panel surface is opaque, so rows do not show through. */
+.responsive-table-wrap > table > thead > tr > th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--zcanopy-surface);
+  box-shadow: 0 1px 0 var(--zcanopy-border);
 }
 
 /* Readable minimum widths, scaled by how many columns the table has. */
