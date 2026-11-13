@@ -420,9 +420,21 @@ export default function MessagesPage() {
   );
 }
 
+type RecipientSelection = "broker" | "customer" | "brokers" | "customers" | "both";
+
+const AUDIENCE_LABELS: Record<"brokers" | "customers" | "both", string> = {
+  brokers: "all brokers",
+  customers: "all customers",
+  both: "all brokers and all customers",
+};
+
+function isAudienceSelection(value: RecipientSelection): value is "brokers" | "customers" | "both" {
+  return value === "brokers" || value === "customers" || value === "both";
+}
+
 function SendMessageComposer({ brokers, customers, loadingRecipients }: { brokers: RecipientOption[]; customers: RecipientOption[]; loadingRecipients: boolean }) {
   const { admin } = useAuth();
-  const [recipientType, setRecipientType] = useState<"broker" | "customer">("broker");
+  const [recipientType, setRecipientType] = useState<RecipientSelection>("broker");
   const [selectedRecipient, setSelectedRecipient] = useState<RecipientOption | null>(null);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -431,12 +443,42 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isBroadcast = isAudienceSelection(recipientType);
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setDone(null);
     setSubmitting(true);
     try {
+      if (isBroadcast) {
+        const audience = recipientType as "brokers" | "customers" | "both";
+        const audienceLabel = AUDIENCE_LABELS[audience];
+        const confirmed = window.confirm(
+          channel === "sms"
+            ? `Send this SMS to ${audienceLabel}? SMS delivery is metered by the carrier and cannot be undone.`
+            : `Send this email to ${audienceLabel}?`,
+        );
+        if (!confirmed) {
+          setSubmitting(false);
+          return;
+        }
+        const result = await adminApi.sendMessageToAudience(admin!.token, {
+          audience,
+          channel,
+          subject,
+          body,
+          messageType: "broadcast",
+        });
+        setDone(
+          result?.message ||
+            `Broadcast queued: ${result?.sent ?? 0} sent${result?.failed ? `, ${result.failed} failed` : ""}.`,
+        );
+        setSubject("");
+        setBody("");
+        return;
+      }
+
       await adminApi.sendMessage(admin!.token, {
         adminId: admin!.id,
         adminUsername: admin!.username,
@@ -469,13 +511,16 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
           <select
             value={recipientType}
             onChange={(e) => {
-              setRecipientType(e.target.value as "broker" | "customer");
+              setRecipientType(e.target.value as RecipientSelection);
               setSelectedRecipient(null);
             }}
             className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--zcanopy-primary)]"
           >
             <option value="broker">Broker</option>
             <option value="customer">Customer</option>
+            <option value="brokers">All brokers</option>
+            <option value="customers">All customers</option>
+            <option value="both">Brokers &amp; customers (everyone)</option>
           </select>
           <select
             value={channel}
@@ -487,13 +532,22 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
           </select>
         </div>
 
-        <RecipientPicker
-          recipientType={recipientType}
-          value={selectedRecipient?.id || ""}
-          onChange={(id, option) => setSelectedRecipient(option)}
-          options={recipientOptions}
-          loading={loadingRecipients}
-        />
+        {isBroadcast ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+            This queues the message for{" "}
+            <strong>{AUDIENCE_LABELS[recipientType as "brokers" | "customers" | "both"]}</strong> via{" "}
+            {channel === "email" ? "email" : "SMS (metered by the carrier)"}. There is no
+            per-recipient preview — double-check the subject and body before sending.
+          </div>
+        ) : (
+          <RecipientPicker
+            recipientType={recipientType}
+            value={selectedRecipient?.id || ""}
+            onChange={(id, option) => setSelectedRecipient(option)}
+            options={recipientOptions}
+            loading={loadingRecipients}
+          />
+        )}
 
         <input
           value={subject}
@@ -513,11 +567,11 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
         {done ? <p className="text-sm text-green-600">{done}</p> : null}
         <button
           type="submit"
-          disabled={submitting || !selectedRecipient}
+          disabled={submitting || (!isBroadcast && !selectedRecipient)}
           className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-90 disabled:opacity-60"
           style={{ backgroundColor: COLORS.primary }}
         >
-          {submitting ? "Sending…" : "Send"}
+          {submitting ? "Sending…" : isBroadcast ? "Send Broadcast" : "Send"}
         </button>
       </form>
     </Panel>

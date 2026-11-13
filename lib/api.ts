@@ -532,6 +532,9 @@ export const adminApi = {
   sendMessage: (token: string, payload: Record<string, unknown>) =>
     apiFetch("/admin/messages/send", { method: "POST", token, body: payload}),
 
+  sendMessageToAudience: (token: string, payload: Record<string, unknown>) =>
+    apiFetch<{ success: boolean; sent: number; failed: number; message: string }>("/admin/messages/send-to-audience", { method: "POST", token, body: payload}),
+
   notifications: (token: string, query?: Record<string, string | number | undefined>) =>
     apiFetch("/admin/notifications", { token, query}),
 
