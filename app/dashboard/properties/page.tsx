@@ -10,9 +10,9 @@ import PropertyCard from "@/components/PropertyCard";
 import { Search } from "lucide-react";
 
 const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; maxVideos: number; maxVideoSizeMB: number }> = {
-  fibrous: { maxProperties: 12, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
-  buttress: { maxProperties: 16, maxPhotos: 50, maxVideos: 4, maxVideoSizeMB: 4 * 1024 },
-  prop: { maxProperties: 5, maxPhotos: 15, maxVideos: 1, maxVideoSizeMB: 500 },
+  fibrous: { maxProperties: 8, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
+  buttress: { maxProperties: 12, maxPhotos: 50, maxVideos: 4, maxVideoSizeMB: 4 * 1024 },
+  prop: { maxProperties: 3, maxPhotos: 15, maxVideos: 1, maxVideoSizeMB: 500 },
 };
 
 const AVAILABILITY = ["all", "available", "unavailable"] as const;

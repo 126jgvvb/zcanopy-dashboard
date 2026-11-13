@@ -14,9 +14,9 @@ const currency = (n: number) =>
   `UGX ${Number(n || 0).toLocaleString("en-UG")}`;
 
 const TIER_LIMITS: Record<string, { maxProperties: number; maxPhotos: number; maxVideos: number; maxVideoSizeMB: number }> = {
-  fibrous: { maxProperties: 12, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
-  buttress: { maxProperties: 16, maxPhotos: 50, maxVideos: 4, maxVideoSizeMB: 4 * 1024 },
-  prop: { maxProperties: 5, maxPhotos: 15, maxVideos: 1, maxVideoSizeMB: 500 },
+  fibrous: { maxProperties: 8, maxPhotos: 25, maxVideos: 2, maxVideoSizeMB: 12 * 1024 },
+  buttress: { maxProperties: 12, maxPhotos: 50, maxVideos: 4, maxVideoSizeMB: 4 * 1024 },
+  prop: { maxProperties: 3, maxPhotos: 15, maxVideos: 1, maxVideoSizeMB: 500 },
 };
 
 function parseSubscriptionTier(value: string | undefined | null): { tier: string; images: string[] } {
