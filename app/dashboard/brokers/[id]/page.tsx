@@ -265,6 +265,57 @@ export default function BrokerDetailPage({
               </div>
             </div>
           </Panel>
+
+          <Panel title="Messages">
+            {messages.length === 0 ? (
+              <p className="py-6 text-center text-sm text-gray-400">No messages.</p>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((m: any) => (
+                  <div key={m.id} className="flex items-start gap-3 rounded-xl border border-gray-100 p-3">
+                    <span
+                      className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: m.read ? COLORS.accentGold : COLORS.primary }}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">{m.senderName || "System"}</p>
+                        <span className="text-[10px] text-gray-400">
+                          {m.sentAt ? new Date(m.sentAt).toLocaleString() : ""}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">{m.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+
+          <Panel title="Bookings">
+            {bookings.length === 0 ? (
+              <p className="py-6 text-center text-sm text-gray-400">No bookings yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {bookings.map((b: any) => (
+                  <div key={b.id} className="flex items-center justify-between rounded-xl border border-gray-100 p-3">
+                    <div>
+                      <p className="text-sm font-medium">{b.propertyTitle}</p>
+                      <p className="text-xs text-gray-400">
+                        {b.customerName} · {b.date ? new Date(b.date).toLocaleDateString() : ""}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">{currency(b.amount)}</p>
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-xs ${b.status === "confirmed" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                        {b.status || "pending"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
         </div>
 
         <div className="lg:col-span-2 space-y-6">
@@ -410,57 +461,6 @@ export default function BrokerDetailPage({
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 {props.map((p: any) => (
                   <PropertyCard key={p.id} property={p} limits={limits} />
-                ))}
-              </div>
-            )}
-          </Panel>
-
-          <Panel title="Messages">
-            {messages.length === 0 ? (
-              <p className="py-6 text-center text-sm text-gray-400">No messages.</p>
-            ) : (
-              <div className="space-y-3">
-                {messages.map((m: any) => (
-                  <div key={m.id} className="flex items-start gap-3 rounded-xl border border-gray-100 p-3">
-                    <span
-                      className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: m.read ? COLORS.accentGold : COLORS.primary }}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{m.senderName || "System"}</p>
-                        <span className="text-[10px] text-gray-400">
-                          {m.sentAt ? new Date(m.sentAt).toLocaleString() : ""}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500">{m.message}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Panel>
-
-           <Panel title="Bookings">
-            {bookings.length === 0 ? (
-              <p className="py-6 text-center text-sm text-gray-400">No bookings yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {bookings.map((b: any) => (
-                  <div key={b.id} className="flex items-center justify-between rounded-xl border border-gray-100 p-3">
-                    <div>
-                      <p className="text-sm font-medium">{b.propertyTitle}</p>
-                      <p className="text-xs text-gray-400">
-                        {b.customerName} · {b.date ? new Date(b.date).toLocaleDateString() : ""}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{currency(b.amount)}</p>
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-xs ${b.status === "confirmed" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                        {b.status || "pending"}
-                      </span>
-                    </div>
-                  </div>
                 ))}
               </div>
             )}
