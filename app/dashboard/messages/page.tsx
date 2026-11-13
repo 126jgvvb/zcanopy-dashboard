@@ -443,6 +443,16 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // SMS is metered and must only be sent to a single person at a time — so
+  // when the channel is SMS the multi-recipient options disappear and the
+  // admin is limited to one selected broker or customer.
+  useEffect(() => {
+    if (channel === "sms" && isAudienceSelection(recipientType)) {
+      setRecipientType("broker");
+      setSelectedRecipient(null);
+    }
+  }, [channel, recipientType]);
+
   const isBroadcast = isAudienceSelection(recipientType);
 
   async function handleSend(e: React.FormEvent) {
@@ -503,6 +513,7 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
   }
 
   const recipientOptions = recipientType === "broker" ? brokers : customers;
+  const singleRecipientType: "broker" | "customer" = recipientType === "customer" ? "customer" : "broker";
 
   return (
     <Panel title="Send Message">
@@ -518,9 +529,13 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
           >
             <option value="broker">Broker</option>
             <option value="customer">Customer</option>
-            <option value="brokers">All brokers</option>
-            <option value="customers">All customers</option>
-            <option value="both">Brokers &amp; customers (everyone)</option>
+            {channel === "email" && (
+              <>
+                <option value="brokers">All brokers</option>
+                <option value="customers">All customers</option>
+                <option value="both">Brokers &amp; customers (everyone)</option>
+              </>
+            )}
           </select>
           <select
             value={channel}
@@ -532,7 +547,14 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
           </select>
         </div>
 
-        {isBroadcast ? (
+        {channel === "sms" && (
+          <p className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+            SMS can only be sent to one selected broker or customer at a time. Use email to broadcast
+            to many recipients.
+          </p>
+        )}
+
+        {isBroadcast && channel === "email" ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
             This queues the message for{" "}
             <strong>{AUDIENCE_LABELS[recipientType as "brokers" | "customers" | "both"]}</strong> via{" "}
@@ -541,7 +563,7 @@ function SendMessageComposer({ brokers, customers, loadingRecipients }: { broker
           </div>
         ) : (
           <RecipientPicker
-            recipientType={recipientType}
+            recipientType={singleRecipientType}
             value={selectedRecipient?.id || ""}
             onChange={(id, option) => setSelectedRecipient(option)}
             options={recipientOptions}
