@@ -185,7 +185,12 @@ export default function BrokerDetailPage({
   // The properties page returns only page 1 (10 items); the service reports
   // the real total, which is what the limits and the analytics pie should use.
   const propsTotal = typeof properties.data?.total === "number" ? properties.data.total : undefined;
-  const bookedCount = bookings.length;
+  // "Booked properties" counts distinct properties that have at least one
+  // booking - one property with ten bookings is one booked property, which
+  // is what the Booked vs Current pie compares against the current total.
+  const bookedCount = new Set(
+    bookings.map((b: any) => b.propertyId ?? b.id).filter(Boolean),
+  ).size;
   const currentCount = propsTotal ?? props.length;
   const typeCounts: Record<string, number> = {};
   props.forEach((p: any) => {
